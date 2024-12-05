@@ -7,7 +7,7 @@ const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x000000, 0.3);
-const camera = new THREE.PerspectiveCamera(75, w / h, 1, 100);
+const camera = new THREE.PerspectiveCamera(55, w / h, 1, 100);
 camera.position.z = 5;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(w, h);
@@ -15,6 +15,8 @@ document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.maxDistance = 7;
+controls.minDistance = 3;
 
 const geometry = new THREE.SphereGeometry(2);
 const lineMat = new THREE.LineBasicMaterial({ 
@@ -32,7 +34,7 @@ scene.add(stars);
 // check here for more datasets ...
 // https://github.com/martynafford/natural-earth-geojson
 // non-geojson datasets: https://www.naturalearthdata.com/downloads/
-fetch('./geojson/ne_110m_land.json')
+fetch('./geojson/countries.json')
   .then(response => response.text())
   .then(text => {
     const data = JSON.parse(text);
