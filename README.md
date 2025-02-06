@@ -1,66 +1,13 @@
-# 3D Globe Visualization with Three.js
+# news
 
-This repository contains a simple Three.js application that renders a 3D globe. It displays feature outlines on a sphere, surrounded by a starfield, and offers simple user interaction (orbit controls).
+So right now this holds some code for making a 3D world, which I would want to make interactive to show ongoing events in the world. 
 
-## Features
+However, I'm going to diverge from that and start a little simpler.
 
-- **Interactive 3D Globe**: Rotate and zoom the globe using orbit controls.
-- **Country Outlines**: Visualizes feature borders using GeoJSON data.
-- **Starfield Background**: Enhances the visual experience with a starfield effect.
+First I'm going to make a news collection and aggregation system. Then this will feed into a NewsService which will provide context and things before feeding to a TTS model. Effectively creating a 24/7 radio bot. 
 
-Watch the tutorial on [YouTube](https://youtu.be/f4zncVufL_I)
+Then we will expand this by creating a 3D avatar news host, creating a 24/7 automated news anchor. 
 
-### Installation
+Afterwards we will expand to create a 3D interactive world in which you can interact with the world and view the news.
 
-1. **Clone the repository**
-
-   ```bash
-   git clone ttps://github.com/bobbyroe/3d-globe-with-threejs.git
-   ```
-
-2. **Navigate to the project directory**
-
-   ```bash
-   cd 3d-globe-with-threejs
-   ```
-
-3. **Set up a local server**
-
-   Install `live-server` globally:
-
-   ```bash
-   npm install -g live-server
-   ```
-
-   Or use it via `npx`:
-
-   ```bash
-   npx live-server --port=8080
-   ```
-
-4. **Run the server**
-
-   ```bash
-   live-server --port=8080
-   ```
-
-   This will serve the files in the current directory at `http://localhost:8080`.
-
-5. **Open the application in your browser**
-
-   Navigate to `http://localhost:8080` to view the globe visualization.
-
-
-## Data Sources
-
-- **GeoJSON Data**: Country outlines are sourced from [Natural Earth GeoJSON](https://github.com/martynafford/natural-earth-geojson).
-- **Additional Datasets**: For more datasets, visit [Natural Earth Data](https://www.naturalearthdata.com/downloads/).
-
-## License
-
-This project is licensed under the MIT License.
-
-## Acknowledgments
-
-- **Three.js**: [threejs.org](https://threejs.org/)
-- **Natural Earth Data**: [naturalearthdata.com](https://www.naturalearthdata.com/)
+The last addition to this project will be adding user feeds, which will allow for following certain news feeds based on location and or people.

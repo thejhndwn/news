@@ -1,0 +1,17 @@
+This describes the architecture of our NewsService
+
+Layers 
+- Data Collection Layer
+ - multiple source adapters
+ - all sourced lead to same format
+ - polling frequencies determined by source
+- Storage Layer
+ - Main data storage for story metadata and processed content
+ - Redis cache for fast access to upcoming content
+- Processing Pipeline
+ - provides context to stories
+ - converts audio
+- Streaming Service
+ - Determines which stories to play
+ - Creates audio output with transitions and such
+ - Handles the streaming output connections
