@@ -1,6 +1,4 @@
 import asyncio
-import aiohttp
-import feedparser
 import re
 from typing import List, Dict
 from datetime import datetime
