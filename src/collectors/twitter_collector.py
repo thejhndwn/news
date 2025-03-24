@@ -1,3 +1,6 @@
+from collectors.base import BaseCollector
+
+
 class TwitterCollector(BaseCollector):
     source_name = 'Twitter'
     
