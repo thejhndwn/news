@@ -1,0 +1,3 @@
+from NewsAggregationStrategy import NewsAggregationStrategy
+from Newspaper import NewspaperAggregationStrategy
+from RSS import RSSAggregationStrategy
