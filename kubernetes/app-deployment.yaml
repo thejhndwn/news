@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-scraper
+  labels:
+    app: news-scraper
+spec:
+  replicas: 1  # Only need one instance for scraping
+  selector:
+    matchLabels:
+      app: news-scraper
+  template:
+    metadata:
+      labels:
+        app: news-scraper
+    spec:
+      initContainers:
+      - name: run-migrations
+        image: ${YOUR_DOCKER_REGISTRY}/news-scraper:latest  # Replace with your registry
+        command: ["alembic", "upgrade", "head"]
+        env:
+        - name: DB_HOST
+          value: "postgres"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "newsdb"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+      containers:
+      - name: scraper
+        image: ${YOUR_DOCKER_REGISTRY}/news-scraper:latest  # Replace with your registry
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+        env:
+        - name: DB_HOST
+          value: "postgres"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "newsdb"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        - name: ENV
+          value: "production"
+        - name: SCRAPE_INTERVAL
+          value: "3600"

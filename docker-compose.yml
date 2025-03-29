@@ -1,14 +1,35 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    depends_on:
-      - redis
+  scraper:
+    build: 
+      context: .
+      dockerfile: app/Dockerfile
     environment:
-      - REDIS_URL=redis://redis:6379
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=newsdb
+      - DB_USER=devuser
+      - DB_PASSWORD=devpassword
+      - SCRAPE_INTERVAL=3600  # in seconds
+      - ENV=development
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./app:/app  # Mount local directory for development
 
-  redis:
-    image: redis:alpine
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=devuser
+      - POSTGRES_PASSWORD=devpassword
+      - POSTGRES_DB=newsdb
     ports:
-      - "6379:6379"
+      - "5432:5432"  # Expose port for local development
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data_dev:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_dev:

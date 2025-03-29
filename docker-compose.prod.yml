@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: 
+      context: .
+      dockerfile: app/Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=newsdb
+      - DB_USER=${DB_PROD_USER}
+      - DB_PASSWORD=${DB_PROD_PASSWORD}
+      - SCRAPE_INTERVAL=3600
+      - ENV=production
+    depends_on:
+      - db
+    restart: always
+    # No volumes mounted in production
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=${DB_PROD_USER}
+      - POSTGRES_PASSWORD=${DB_PROD_PASSWORD}
+      - POSTGRES_DB=newsdb
+    # No port exposure in production
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data_prod:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_prod:
