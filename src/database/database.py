@@ -38,24 +38,9 @@ def get_engine(retries=5, delay=5):
                 print(f"Database connection failed after {retries} attempts: {e}")
                 raise
 
-# Create the engine
-engine = get_engine()
-
-# Create a session factory
-SessionFactory = sessionmaker(bind=engine)
-
-# Create a scoped session for thread safety
-Session = scoped_session(SessionFactory)
 
 def init_db():
     """Initialize the database schema"""
     from models import Base
-    Base.metadata.create_all(engine)
-
-def get_db_session():
-    """Get a database session"""
-    session = Session()
-    try:
-        yield session
-    finally:
-        session.close()
+    Base.metadata.create_all(get_engine())
+    print("Database initialized successfully.")

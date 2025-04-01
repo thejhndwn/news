@@ -1,5 +1,8 @@
 import logging
 import time
+from database.database import init_db, get_engine
+from collectors.NewsAggregator import NewsAggregator
+from sqlalchemy.orm import Session
 
 
 def main():
@@ -7,8 +10,15 @@ def main():
     logging.info("starting main.py")
 
     # connect to the database
-    
+    logging.info("try to initialize database")
+    init_db
+
     # run scraping scripts
+    logging.info("creating a database session")
+    with Session(get_engine) as session:
+        session.commit()
+        logging.info("Database connected to successfully")
+
 
 
 
