@@ -24,8 +24,8 @@ def main():
         article = Article(
             title = "test title",
             url = "test url",
-            source = "test source"
-            publish_date = "test date"
+            source = "test source",
+            publish_date = "test date",
             full_text = "test text"
         )
         session.add(article)
