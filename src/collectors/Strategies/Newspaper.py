@@ -1,5 +1,5 @@
-from NewsAggregationStrategy import NewsAggregationStrategy
-from NewsArticle import NewsArticle
+from .NewsAggregationStrategy import NewsAggregationStrategy
+from ..NewsArticle import NewsArticle
 from typing import List
 import logging
 import datetime

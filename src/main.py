@@ -3,6 +3,8 @@ import time
 from database.database import init_db, get_engine
 from collectors.NewsAggregator import NewsAggregator
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from .database.models import Article
 
 
 def main():
@@ -18,6 +20,20 @@ def main():
     with Session(get_engine) as session:
         session.commit()
         logging.info("Database connected to successfully")
+
+        article = Article(
+            title = "test title",
+            url = "test url",
+            source = "test source"
+            publish_date = "test date"
+            full_text = "test text"
+        )
+        session.add(article)
+        session.commit()
+        logging.info("Article added to database")
+        stmt = select(Article)
+        for row in session.scalars(stmt):
+            logging.info(row)
 
 
 

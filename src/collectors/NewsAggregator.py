@@ -1,6 +1,6 @@
-from .Strategies import NewspaperAggregationStrategy
-from .Strategies import RSSAggregationStrategy
-from .Strategies import NewsAggregationStrategy
+from .Strategies.NewsAggregationStrategy import NewsAggregationStrategy
+from .Strategies.RSS import RSSAggregationStrategy
+from .Strategies.Newspaper import NewspaperAggregationStrategy
 from .NewsArticle import NewsArticle
 
 import logging

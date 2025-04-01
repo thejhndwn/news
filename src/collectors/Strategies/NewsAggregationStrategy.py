@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from NewsArticle import NewsArticle
+from ..NewsArticle import NewsArticle
 
 class NewsAggregationStrategy(ABC):
     """
