@@ -4,7 +4,7 @@ services:
   scraper:
     build: 
       context: .
-      dockerfile: app/Dockerfile
+      dockerfile: ./Dockerfile
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -15,9 +15,9 @@ services:
       - ENV=development
     depends_on:
       - db
-    restart: unless-stopped
+    restart: no
     volumes:
-      - ./app:/app  # Mount local directory for development
+      - ./src:/app/src  # Mount local directory for development
 
   db:
     image: postgres:13
@@ -28,7 +28,6 @@ services:
     ports:
       - "5432:5432"  # Expose port for local development
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data_dev:/var/lib/postgresql/data
 
 volumes:
