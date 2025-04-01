@@ -13,6 +13,4 @@ class NewsArticle:
     url: str
     publish_date: datetime
     source: str
-    importance_score: float = 0.0
-    keywords: List[str] = None
     full_text: str = ''

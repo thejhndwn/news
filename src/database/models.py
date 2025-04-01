@@ -11,15 +11,14 @@ class Article(Base):
     id = Column(Integer, primary_key=True)
     title = Column(Text, nullable=False)
     url = Column(Text, nullable=False, unique=True)
-    content = Column(Text)
-    published_date = Column(DateTime)
+    publish_date = Column(DateTime, default=datetime.utcnow, nullable=False) 
     source = Column(String(100))
-    created_at = Column(DateTime, default=func.now())
+    full_text = Column(Text)
     
     # Define indexes
     __table_args__ = (
         Index('idx_articles_source', source),
-        Index('idx_articles_published_date', published_date),
+        Index('idx_articles_published_date', publish_date),
     )
     
     def __repr__(self):

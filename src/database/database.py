@@ -20,9 +20,7 @@ def get_engine(retries=5, delay=5):
         try:
             engine = create_engine(
                 DATABASE_URL,
-                echo=False,  # Set to True for SQL logging
-                pool_pre_ping=True,  # Verify connection is good before using
-                pool_recycle=3600,  # Recycle connections every hour
+                echo=True
             )
             
             # Test the connection
