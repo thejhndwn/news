@@ -13,11 +13,11 @@ def main():
 
     # connect to the database
     logging.info("try to initialize database")
-    init_db
+    init_db()
 
     # run scraping scripts
     logging.info("creating a database session")
-    with Session(get_engine) as session:
+    with Session(get_engine()) as session:
         logging.info("Database connected to successfully")
 
         article = Article(
@@ -33,6 +33,9 @@ def main():
         stmt = select(Article)
         for row in session.scalars(stmt):
             logging.info(row)
+
+    logging.info("finished main.py")
+    NewsAggregator()
 
 
 
