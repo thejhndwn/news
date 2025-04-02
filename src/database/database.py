@@ -49,7 +49,7 @@ Session = scoped_session(SessionFactory)
 
 def init_db():
     """Initialize the database schema"""
-    from models import Base
+    from database.models import Base
     Base.metadata.create_all(engine)
 
 def get_db_session():

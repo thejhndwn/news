@@ -6,8 +6,6 @@ import datetime
 import newspaper
 
 class NewspaperAggregationStrategy(NewsAggregationStrategy):
-    def __init__():
-        pass
 
     def fetch_articles(self, 
                     sources: List[str], 
