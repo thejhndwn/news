@@ -1,10 +1,10 @@
 import logging
-import time
+import datetime
 from database.database import init_db, get_engine
 from collectors.NewsAggregator import NewsAggregator
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from .database.models import Article
+from database.models import Article
 
 
 def main():
@@ -18,14 +18,13 @@ def main():
     # run scraping scripts
     logging.info("creating a database session")
     with Session(get_engine) as session:
-        session.commit()
         logging.info("Database connected to successfully")
 
         article = Article(
             title = "test title",
             url = "test url",
             source = "test source",
-            publish_date = "test date",
+            publish_date = datetime.datetime.now(),
             full_text = "test text"
         )
         session.add(article)

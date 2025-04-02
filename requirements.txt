@@ -22,6 +22,7 @@ newspaper3k==0.2.8
 nltk==3.9.1
 pillow==11.2.0
 propcache==0.2.1
+psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
 PyYAML==6.0.2
 regex==2024.11.6

@@ -11,7 +11,7 @@ class Article(Base):
     id = Column(Integer, primary_key=True)
     title = Column(Text, nullable=False)
     url = Column(Text, nullable=False, unique=True)
-    publish_date = Column(DateTime, default=datetime.utcnow, nullable=False) 
+    publish_date = Column(DateTime, nullable=False) 
     source = Column(String(100))
     full_text = Column(Text)
     
