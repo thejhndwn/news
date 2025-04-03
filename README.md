@@ -13,9 +13,12 @@ if 3D:
 
 current state
 news aggregation
-story picking/priority service
-story content generation service
-video generation service
+story picking/priority
+ twitch suggestions
+text generation
+audio generation
+video generation
+streaming 
 
 1. grab stories 
 => almost done, just need to finish the story grabbing
