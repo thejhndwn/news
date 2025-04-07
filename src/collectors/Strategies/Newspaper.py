@@ -5,6 +5,9 @@ import logging
 import datetime
 import newspaper
 
+from newspaper import Article
+from newspaper import Config
+
 class NewspaperAggregationStrategy(NewsAggregationStrategy):
 
     def fetch_articles(self, 

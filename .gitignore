@@ -117,3 +117,4 @@ purgatory/
 .secrets
 *.mp4
 *.mp3
+output/
