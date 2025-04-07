@@ -114,3 +114,6 @@ node_modules/
 
 
 purgatory/
+.secrets
+*.mp4
+*.mp3
