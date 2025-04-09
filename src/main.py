@@ -6,12 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from database.models import Article
 
-from newspaper import Article
-from newspaper import Config
-
-news_sources = [
-    "https://www.cnn.com"
-]
+from newspaper import Article, build
 
 
 def main():
@@ -21,18 +16,6 @@ def main():
     # connect to the database
     logging.info("try to initialize database")
     init_db()
-
-    logging.info("trying some news scraping manually")
-    USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0) Gecko/20100101 Firefox/78.0'
-
-    config = Config()
-    config.browser_user_agent = USER_AGENT
-    config.request_timeout = 10
-
-    base_url = 'https://www.wsj.com'
-    article = Article(base_url, config=config)
-
-    logging.info("found this article: ", article)
 
 
     # run scraping scripts
@@ -52,19 +35,13 @@ def main():
         # logging.info("Article added to database")
         
 
-        logging.info("finished main.py")
-        news_aggregator = NewsAggregator()
-        news_aggregator.aggregate_news(news_sources, max_articles=10)
-        session.add_all(news_aggregator.articles)
-        session.commit()
+        #url = "https://www.npr.org/2025/04/08/nx-s1-5355624/world-markets-international-trump-tariffs"
+        url = "https://www.bbc.com/news/live/cp8vyy35g3mt"
 
-        logging.info("committed all articles to database, printing articles now")
-        stmt = select(Article)
-        for row in session.scalars(stmt):
-            logging.info(row)
+        cnn_paper = build("https://cnn.com", memoize_articles=False)
+        logging.info(len(cnn_paper.articles)) 
 
-
-
+        # websites list npr, bcc, 
 
 
 if __name__ == "__main__":
