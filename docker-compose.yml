@@ -18,6 +18,7 @@ services:
     restart: no
     volumes:
       - ./src:/app/src  # Mount local directory for development
+      - ./output:/app/output  # Mount output directory for development
 
   db:
     image: postgres:13

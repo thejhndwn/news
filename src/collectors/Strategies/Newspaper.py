@@ -24,15 +24,12 @@ class NewspaperAggregationStrategy(NewsAggregationStrategy):
                     try:
                         article.download()
                         article.parse()
-                        article.nlp()
                         
                         news_article = NewsArticle(
                             title=article.title,
-                            summary=article.summary,
                             url=article.url,
-                            publish_date=article.publish_date or datetime.now(),
+                            publish_date=article.publish_date or datetime.datetime.now(),
                             source=source_url,
-                            keywords=article.keywords,
                             full_text=article.text
                         )
                         articles.append(news_article)

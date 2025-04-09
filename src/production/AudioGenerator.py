@@ -1,22 +1,24 @@
 
-import pyttsx3
+# Use a pipeline as a high-level helper
+from transformers import pipeline
+import soundfile as sf
+import torch
+from datasets import load_dataset
+
 
 class AudioGenerator:
     def __init__(self):
-        self.engine = pyttsx3.init()
+        self.pipe = pipeline("text-to-speech", model="microsoft/speecht5_tts")
+        self.root_dir = Path(__file__).resolve().parents[2]  # go up from /src/production
+        self.audio_file = self.root_dir / "output" / "audio" 
+        self.audio_file = 
 
-        # Set properties (optional)
-        self.engine.setProperty('rate', 150)    # Speed of speech (words per minute)
-        self.engine.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
+        embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
+        self.speaker_embedding = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0)
 
-        print("engine initialized")
-    
-    def generate(self, text = "Hello, this is a testing voice!"):
-        # Save to an audio file
-        output_file = "output2.mp3"  # Specify the file name
-        self.engine.save_to_file(text, output_file)
+    def generate(self, uuid,  text = "Hello, this is a testing voice!"):
+        audio = self.pipe(text, forward_params={"speaker_embeddings": self.speaker_embedding})
 
-        # Run the engine to process the file
-        self.engine.runAndWait()
+        sf.write(f"{uuid}.wav", audio["audio"], audio["sampling_rate"])
 
-        print(f"Audio file saved as {output_file}")
+        print("Audio generated and saved as output.wav")

@@ -4,46 +4,39 @@ from production.AudioGenerator import AudioGenerator
 from production.VideoGenerator import VideoGenerator
 from production.TwitchUtils import TwitchStreamer
 
-from dotenv import load_dotenv
-import os    
-from pathlib import Path
+from database.database import get_engine, Session
+from database.models import Article
 
+import logging
+import uuid
 
-
-def get_story():
-    return ""
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+
+    ScriptGenerator = ScriptGenerator()
+    AudioGenerator = AudioGenerator()
+    VideoGenerator = VideoGenerator()
 
 
 
-    # Build path to parent directory
-    base_dir = Path(__file__).resolve().parent.parent
-    secrets_path = base_dir / ".secrets"
-
-    # Load from .secrets (default is .env, but you can name it anything)
-    load_dotenv(dotenv_path=secrets_path)
-
-    # Now you can grab it like any environment variable
-    stream_key = os.getenv("TWITCH_STREAM_KEY")
-
-
-    story = get_story()
-
-    
-    # staging
+    # database connection
+    engine = get_engine()
+    session = Session()
     context = {}
-    text = ScriptGenerator.generate(story, context)
 
-    audio = AudioGenerator.generate(text)
-    
-    # content generation
-    video_path = VideoGenerator.generate(text, audio)
+    uuid = uuid.uuid4()
+    story = session.query(Article).first()
+    logging.info(story.title)
+
+    text = ScriptGenerator.generate(story, context)
+    audio = AudioGenerator.generate(uuid, text)
+    video_path = VideoGenerator.generate(uuid, text, audio)
 
     # production orchestration
     # figures out what videos are queued to be played, if we need more video and all that
 
-    TwitchStreamer(stream_key, video_path).start_stream()
+    # TwitchStreamer(stream_key, video_path).start_stream()
 
 
 
