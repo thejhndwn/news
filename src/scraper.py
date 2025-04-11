@@ -35,7 +35,7 @@ def main():
                 full_text = article.full_text
             ))
             try:
-                sessionl.commit()
+                session.commit()
             except IntegrityError:
                 session.rollback()
                 logging.warning(f"Duplicate article found: {article.url}")

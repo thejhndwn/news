@@ -20,6 +20,26 @@ services:
       - ./src:/app/src  # Mount local directory for development
       - ./output:/app/output  # Mount output directory for development
 
+  production:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=newsdb
+      - DB_USER=devuser
+      - DB_PASSWORD=devpassword
+      - SCRAPE_INTERVAL=3600  # in seconds
+      - ENV=production
+    depends_on:
+      - db
+    restart: no
+    volumes:
+      - ./src:/app/src  # Mount local directory for development
+      - ./output:/app/output  # Mount output directory for development
+    command: ["python", "src/production.py"]
+
   db:
     image: postgres:13
     environment:

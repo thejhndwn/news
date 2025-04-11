@@ -1,6 +1,7 @@
 
 # Use a pipeline as a high-level helper
 from transformers import pipeline
+from pathlib import Path
 import soundfile as sf
 import torch
 from datasets import load_dataset
@@ -11,7 +12,6 @@ class AudioGenerator:
         self.pipe = pipeline("text-to-speech", model="microsoft/speecht5_tts")
         self.root_dir = Path(__file__).resolve().parents[2]  # go up from /src/production
         self.audio_file = self.root_dir / "output" / "audio" 
-        self.audio_file = 
 
         embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
         self.speaker_embedding = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0)

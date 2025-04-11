@@ -4,39 +4,36 @@ from production.AudioGenerator import AudioGenerator
 from production.VideoGenerator import VideoGenerator
 from production.TwitchUtils import TwitchStreamer
 
-from database.database import get_engine, Session
+from database.database import get_engine
+from sqlalchemy.orm import Session
 from database.models import Article
 
 import logging
 import uuid
 
-
 def main():
     logging.basicConfig(level=logging.INFO)
-
-    ScriptGenerator = ScriptGenerator()
-    AudioGenerator = AudioGenerator()
-    VideoGenerator = VideoGenerator()
-
-
-
-    # database connection
-    engine = get_engine()
     session = Session()
+    article = None
+
+    with Session(get_engine()) as session:
+        article = session.query(Article).first()
+        logging.info("grabbed article")
+
+
+    script_generator = ScriptGenerator()
+    audio_generator = AudioGenerator()
+    video_generator = VideoGenerator()
+
+    id = uuid.uuid4()
     context = {}
+    text = script_generator.generate(article, context)
+    audio = audio_generator.generate(id, text)
+    video_path = video_generator.generate(id)
 
-    uuid = uuid.uuid4()
-    story = session.query(Article).first()
-    logging.info(story.title)
+    # we get the file path of the video, we should add it to the dynamic twitch queue
 
-    text = ScriptGenerator.generate(story, context)
-    audio = AudioGenerator.generate(uuid, text)
-    video_path = VideoGenerator.generate(uuid, text, audio)
-
-    # production orchestration
-    # figures out what videos are queued to be played, if we need more video and all that
-
-    # TwitchStreamer(stream_key, video_path).start_stream()
+    # 
 
 
 
