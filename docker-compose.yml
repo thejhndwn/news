@@ -4,7 +4,7 @@ services:
   scraper:
     build: 
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.scraper
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -32,13 +32,15 @@ services:
       - DB_PASSWORD=devpassword
       - SCRAPE_INTERVAL=3600  # in seconds
       - ENV=production
+      - BLENDER_FILEPATH=/usr/local/bin/blender
+      - OUTPUT_FILEPATH=/app/output
+      - ASSETS_FILEPATH=/app/src/assets
     depends_on:
       - db
     restart: no
     volumes:
       - ./src:/app/src  # Mount local directory for development
       - ./output:/app/output  # Mount output directory for development
-    command: ["python", "src/production.py"]
 
   db:
     image: postgres:13

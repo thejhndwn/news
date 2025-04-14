@@ -2,6 +2,6 @@
 from production.AudioGenerator import AudioGenerator
 
 
-AudioGenerator = AudioGenerator()
-AudioGenerator.generate()
+AudioGenerator = AudioGenerator("/home/john-duan/Celia/news/output")
+AudioGenerator.generate(11111)
 print("done")

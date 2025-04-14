@@ -8,10 +8,9 @@ from datasets import load_dataset
 
 
 class AudioGenerator:
-    def __init__(self):
+    def __init__(self, output_path):
         self.pipe = pipeline("text-to-speech", model="microsoft/speecht5_tts")
-        self.root_dir = Path(__file__).resolve().parents[2]  # go up from /src/production
-        self.audio_file = self.root_dir / "output" / "audio" 
+        self.audio_path = output_path + "/audio"
 
         embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
         self.speaker_embedding = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0)
@@ -19,6 +18,6 @@ class AudioGenerator:
     def generate(self, uuid,  text = "Hello, this is a testing voice!"):
         audio = self.pipe(text, forward_params={"speaker_embeddings": self.speaker_embedding})
 
-        sf.write(f"{uuid}.wav", audio["audio"], audio["sampling_rate"])
+        sf.write(f"{self.audio_path}/{uuid}.wav", audio["audio"], audio["sampling_rate"])
 
         print("Audio generated and saved as output.wav")

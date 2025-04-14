@@ -2,6 +2,7 @@ import logging
 from database.database import init_db, get_engine
 from collectors.NewsAggregator import NewsAggregator
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from database.models import Article
 
 sources = [

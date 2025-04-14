@@ -1,6 +1,16 @@
 import bpy
 import math
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+logging.info("begin the procedure")
+
+# Set the render device to GPU
+bpy.context.scene.cycles.device = 'GPU'
+
+
 # Use the current scene (already loaded)
 scene = bpy.context.scene
 scene.frame_start = 0
@@ -47,7 +57,7 @@ left_arm.keyframe_insert(data_path="rotation_euler", frame=240)
 scene.render.engine = 'BLENDER_EEVEE_NEXT'
 scene.render.resolution_x = 1280
 scene.render.resolution_y = 720
-scene.render.filepath = "/home/john-duan/Celia/news/output/blender/blendertest.mp4"
+scene.render.filepath = "/app/output/video/blendertest.mp4"
 scene.render.image_settings.file_format = 'FFMPEG'
 scene.render.ffmpeg.format = 'MPEG4'
 scene.render.ffmpeg.codec = 'H264'
