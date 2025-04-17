@@ -95,7 +95,14 @@ class VideoGenerator:
         return self.video_path / f"TEST_{uuid}.mp4"
 
 
-    def generate_visemes(self, audio):
+    def generate_visemes(self, audio, uuid):
         # do some viseme generation stuff here
+        # run something like this: ./src/assets/Rhubarb-Lip-Sync-1.14.0-Linux/rhubarb -o output.txt ./output/audio/11111.wav 
+
+        command = [
+            ./src/assets/Rhubarb-Lip-Sync-1.14.0-Linux/rhubarb,
+            "-o", self.assets_dir + "/visemes.txt", # output rhubarb txt file
+            "./output/audio/" + str(uuid) + ".wav"  # input audio file
+        ]
         pass
 

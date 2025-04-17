@@ -118,3 +118,5 @@ purgatory/
 *.mp4
 *.mp3
 output/
+test_output_video/
+Kokoro-82M/

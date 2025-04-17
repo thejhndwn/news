@@ -6,6 +6,7 @@ from production.TwitchUtils import TwitchStreamer
 
 from database.database import get_engine
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from database.models import Article
 
 import logging
@@ -19,10 +20,14 @@ def main():
     assets_path = os.getenv("ASSETS_FILEPATH", "/app/src/assets")
     session = Session()
     article = None
+    logging.info("getting article")
 
     with Session(get_engine()) as session:
-        article = session.query(Article).first()
-        logging.info("grabbed article")
+        article = session.query(Article).order_by(func.random()).first()
+        logging.info(f"grabbed article:  {article.title}")
+        logging.info(f"with text {article.full_text}")
+
+    logging.info("article got")
 
 
     script_generator = ScriptGenerator()
@@ -35,6 +40,8 @@ def main():
 
 
     text = script_generator.generate(article, context)
+
+    logging.info(f"this is the text: {text}")
     logging.info("starting audio generation")
     audio = audio_generator.generate(id, text)
     logging.info("starting video generation")
