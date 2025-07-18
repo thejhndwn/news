@@ -1,515 +1,407 @@
-import asyncio
-import json
 import time
 import threading
-import queue
-import os
-from typing import Dict, List, Optional, Tuple
-import websockets
-from dataclasses import dataclass
-from enum import Enum
+import json
+from pathlib import Path
+import websocket
+import uuid
+import subprocess
+import sys
+import obsws_python as obs
 import wave
-import contextlib
+import os
 
-WINDOWS_HOST_IP="10.255.255.254"
+# VTube Studio API settings
+WINDOWS_IP = "172.18.224.1"
+VTUBE_STUDIO_URL = f"ws://{WINDOWS_IP}:8001"
+OBS_PASSWORD = "MNQQ30Jkgfv8qz58"
+OBS_PORT = 4455
 
-class Priority(Enum):
-    NORMAL = 1
-    BREAKING = 2
-    URGENT = 3
+# OBS WebSocket settings (default port)
+OBS_URL = f"ws://{WINDOWS_IP}:4455"
 
-@dataclass
-class NewsItem:
-    audio_file: str
-    viseme_file: str
-    priority: Priority = Priority.NORMAL
-    id: str = ""
-    
-    def __post_init__(self):
-        if not self.id:
-            self.id = f"{int(time.time() * 1000)}"
+# API authentication
+PLUGIN_NAME = "NewsStreamerBot"
+PLUGIN_DEVELOPER = "YourName"
+AUTH_TOKEN = None
+WS_CONNECTION = None
+OBS_CONNECTION = None
+WSL_PREFIX = "//wsl.localhost/Ubuntu"
 
-class VTuberStudioAPI:
-    def __init__(self, host=None, port=8001):
-        self.host = host or WINDOWS_HOST_IP
-        self.port = port
-        self.websocket = None
-        self.authenticated = False
-        
-    async def connect(self):
-        """Connect to VTuber Studio API"""
-        try:
-            self.websocket = await websockets.connect(f"ws://{self.host}:{self.port}")
-            print("Connected to VTuber Studio")
-            return True
-        except Exception as e:
-            print(f"Failed to connect to VTuber Studio: {e}")
-            return False
-    
-    async def authenticate(self):
-        """Authenticate with VTuber Studio"""
-        auth_request = {
-            "apiName": "VTuberStudioPublicAPI",
-            "apiVersion": "1.0",
-            "requestID": "auth_request",
-            "messageType": "AuthenticationTokenRequest",
-            "data": {
-                "pluginName": "NewsStreamerBot",
-                "pluginDeveloper": "YourName",
-                "pluginIcon": ""
-            }
-        }
-        
-        try:
-            await self.websocket.send(json.dumps(auth_request))
-            response = await self.websocket.recv()
-            data = json.loads(response)
-            
-            if data.get("messageType") == "AuthenticationTokenResponse":
-                token = data["data"]["authenticationToken"]
-                
-                # Now authenticate with the token
-                auth_with_token = {
-                    "apiName": "VTuberStudioPublicAPI",
-                    "apiVersion": "1.0",
-                    "requestID": "auth_with_token",
-                    "messageType": "AuthenticationRequest",
-                    "data": {
-                        "pluginName": "NewsStreamerBot",
-                        "pluginDeveloper": "YourName",
-                        "authenticationToken": token
-                    }
-                }
-                
-                await self.websocket.send(json.dumps(auth_with_token))
-                response = await self.websocket.recv()
-                data = json.loads(response)
-                
-                if data.get("messageType") == "AuthenticationResponse":
-                    self.authenticated = data["data"]["authenticated"]
-                    print(f"Authentication: {'Success' if self.authenticated else 'Failed'}")
-                    return self.authenticated
-                    
-        except Exception as e:
-            print(f"Authentication error: {e}")
-            return False
-    
-    async def send_viseme(self, viseme_data: str):
-        """Send viseme data to VTuber Studio"""
-        if not self.authenticated:
-            print("Not authenticated with VTuber Studio")
-            return
-            
-        # Parse viseme data and send mouth movements
-        # This is a simplified version - you'll need to adapt based on your viseme format
-        try:
-            viseme_request = {
-                "apiName": "VTuberStudioPublicAPI",
-                "apiVersion": "1.0",
-                "requestID": f"viseme_{int(time.time() * 1000)}",
-                "messageType": "InjectParameterDataRequest",
-                "data": {
-                    "parameterValues": [
-                        {
-                            "id": "MouthOpen",
-                            "value": self.parse_viseme_intensity(viseme_data)
-                        }
-                    ]
-                }
-            }
-            
-            await self.websocket.send(json.dumps(viseme_request))
-            
-        except Exception as e:
-            print(f"Error sending viseme: {e}")
-    
-    def parse_viseme_intensity(self, viseme_data: str) -> float:
-        """Parse viseme data to mouth intensity (0.0 to 1.0)"""
-        # This is a placeholder - adapt based on your viseme format
-        # Common visemes: A, E, I, O, U, M, B, P, F, V, etc.
-        vowel_intensity = {'A': 0.8, 'E': 0.6, 'I': 0.4, 'O': 0.9, 'U': 0.7}
-        consonant_intensity = {'M': 0.2, 'B': 0.3, 'P': 0.3, 'F': 0.1, 'V': 0.2}
-        
-        # Simple parsing - you'll want to make this more sophisticated
-        if viseme_data.strip().upper() in vowel_intensity:
-            return vowel_intensity[viseme_data.strip().upper()]
-        elif viseme_data.strip().upper() in consonant_intensity:
-            return consonant_intensity[viseme_data.strip().upper()]
-        else:
-            return 0.0
-    
-    async def disconnect(self):
-        """Disconnect from VTuber Studio"""
-        if self.websocket:
-            await self.websocket.close()
-            print("Disconnected from VTuber Studio")
-
-class OBSClient:
-    def __init__(self, host=None, port=4455, password=""):
-        self.host = host or WINDOWS_HOST_IP
-        self.port = port
-        self.password = password
-        self.websocket = None
-        self.authenticated = False
-        
-    async def connect(self):
-        """Connect to OBS WebSocket"""
-        try:
-            self.websocket = await websockets.connect(f"ws://{self.host}:{self.port}")
-            print("Connected to OBS WebSocket")
-            
-            # Authenticate if password is set
-            if self.password:
-                await self.authenticate()
-            else:
-                self.authenticated = True
-            
-            return True
-        except Exception as e:
-            print(f"Failed to connect to OBS: {e}")
-            return False
-    
-    async def authenticate(self):
-        """Authenticate with OBS"""
-        # OBS WebSocket authentication logic would go here
-        # For now, assuming no auth needed
-        self.authenticated = True
-        
-    async def set_media_source(self, source_name: str, file_path: str):
-        """Set media source file in OBS"""
-        if not self.authenticated:
-            return False
-            
-        request = {
-            "op": 6,  # Request
-            "d": {
-                "requestType": "SetInputSettings",
-                "requestId": f"set_media_{int(time.time() * 1000)}",
-                "requestData": {
-                    "inputName": source_name,
-                    "inputSettings": {
-                        "local_file": file_path
-                    }
-                }
-            }
-        }
-        
-        try:
-            await self.websocket.send(json.dumps(request))
-            response = await self.websocket.recv()
-            print(f"Set media source {source_name} to {file_path}")
-            return True
-        except Exception as e:
-            print(f"Error setting media source: {e}")
-            return False
-    
-    async def trigger_media_restart(self, source_name: str):
-        """Restart media source playback"""
-        request = {
-            "op": 6,
-            "d": {
-                "requestType": "TriggerMediaInputAction",
-                "requestId": f"trigger_media_{int(time.time() * 1000)}",
-                "requestData": {
-                    "inputName": source_name,
-                    "mediaAction": "OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART"
-                }
-            }
-        }
-        
-        try:
-            await self.websocket.send(json.dumps(request))
-            response = await self.websocket.recv()
-            print(f"Triggered restart for {source_name}")
-            return True
-        except Exception as e:
-            print(f"Error triggering media restart: {e}")
-            return False
-    
-    async def disconnect(self):
-        """Disconnect from OBS"""
-        if self.websocket:
-            await self.websocket.close()
-            print("Disconnected from OBS")
-
-class AudioManager:
-    def __init__(self):
-        self.current_audio = None
-        self.audio_start_time = 0
-        
-    def get_audio_duration(self, audio_file: str) -> float:
-        """Get audio duration without playing"""
-        try:
-            with contextlib.closing(wave.open(audio_file, 'r')) as f:
-                frames = f.getnframes()
-                rate = f.getframerate()
-                duration = frames / float(rate)
-                return duration
-        except Exception as e:
-            print(f"Error getting audio duration for {audio_file}: {e}")
-            return 0.0
-    
-    def start_audio_tracking(self, audio_file: str) -> float:
-        """Start tracking audio playback"""
-        self.current_audio = audio_file
-        self.audio_start_time = time.time()
-        duration = self.get_audio_duration(audio_file)
-        print(f"Tracking audio: {audio_file} (Duration: {duration:.2f}s)")
+def get_wav_duration(filepath):
+    with wave.open(filepath, 'rb') as wf:
+        frames = wf.getnframes()
+        rate = wf.getframerate()
+        duration = frames / float(rate)
         return duration
-    
-    def stop_audio_tracking(self):
-        """Stop tracking current audio"""
-        self.current_audio = None
-        self.audio_start_time = 0
-        print("Audio tracking stopped")
-    
-    def is_audio_playing(self) -> bool:
-        """Check if audio should still be playing based on duration"""
-        if not self.current_audio:
-            return False
-        
-        elapsed = time.time() - self.audio_start_time
-        duration = self.get_audio_duration(self.current_audio)
-        return elapsed < duration
-    
-    def get_audio_position(self) -> float:
-        """Get current audio position in seconds"""
-        if not self.current_audio:
-            return 0.0
-        return time.time() - self.audio_start_time
 
-class NewsStreamer:
-    def __init__(self, audio_source_name="NewsAudio"):
-        self.vts_api = VTuberStudioAPI()
-        self.obs_client = OBSClient()
-        self.audio_manager = AudioManager()
-        self.audio_source_name = audio_source_name
-        self.news_queue = queue.PriorityQueue()
-        self.current_item: Optional[NewsItem] = None
-        self.is_running = False
-        self.playback_thread = None
-        self.sequence_number = 0  # Add sequence counter for queue ordering
-        
-    async def initialize(self):
-        """Initialize VTuber Studio and OBS connections"""
-        vts_connected = await self.vts_api.connect()
-        if vts_connected:
-            await self.vts_api.authenticate()
-        
-        obs_connected = await self.obs_client.connect()
-        
-        if not vts_connected:
-            print("Warning: VTuber Studio not connected - visemes will be skipped")
-        if not obs_connected:
-            print("Warning: OBS not connected - using fallback audio tracking")
-            
-        return vts_connected or obs_connected  # At least one should work
-    
-    def add_news_item(self, audio_file: str, viseme_file: str, priority: Priority = Priority.NORMAL):
-        """Add news item to queue"""
-        item = NewsItem(audio_file, viseme_file, priority)
-        # Priority queue uses tuple (priority_value, sequence_number, item)
-        # Lower number = higher priority
-        priority_value = 4 - priority.value  # Invert so URGENT=1, BREAKING=2, NORMAL=3
-        self.sequence_number += 1
-        self.news_queue.put((priority_value, self.sequence_number, item))
-        print(f"Added news item: {audio_file} (Priority: {priority.name})")
-    
-    def add_breaking_news(self, audio_file: str, viseme_file: str):
-        """Add breaking news (interrupts current playback)"""
-        print("🚨 BREAKING NEWS ALERT 🚨")
-        
-        # Stop current playback
-        self.stop_current_playback()
-        
-        # Add breaking news with highest priority
-        self.add_news_item(audio_file, viseme_file, Priority.URGENT)
-    
-    def stop_current_playback(self):
-        """Stop current audio/viseme playback"""
-        # Stop OBS audio source
-        if self.obs_client.authenticated:
-            asyncio.create_task(self.obs_client.trigger_media_restart(self.audio_source_name))
-        
-        # Stop audio tracking
-        self.audio_manager.stop_audio_tracking()
-        self.current_item = None
-        print("Current playback stopped")
-    
-    def load_viseme_data(self, viseme_file: str) -> List[Tuple[float, str]]:
-        """Load viseme data from file"""
-        try:
-            with open(viseme_file, 'r') as f:
-                lines = f.readlines()
-            
-            viseme_data = []
-            for line in lines:
+
+def load_viseme_data(viseme_file):
+    """Load and parse rhubarb viseme data"""
+    visemes = []
+    try:
+        with open(viseme_file, 'r') as f:
+            for line in f:
                 line = line.strip()
-                if line:
-                    # Assuming format: timestamp viseme_type
-                    # Example: "0.1 A", "0.2 E", etc.
+                if line and not line.startswith('#'):
                     parts = line.split()
                     if len(parts) >= 2:
                         timestamp = float(parts[0])
                         viseme = parts[1]
-                        viseme_data.append((timestamp, viseme))
-            
-            return viseme_data
-            
-        except Exception as e:
-            print(f"Error loading viseme data from {viseme_file}: {e}")
-            return []
+                        visemes.append((timestamp, viseme))
+    except FileNotFoundError:
+        print(f"Warning: Viseme file {viseme_file} not found")
+        return []
     
-    async def play_news_item(self, item: NewsItem):
-        """Play a single news item with synchronized audio and visemes"""
-        print(f"Playing news item: {item.audio_file}")
-        
-        # Load viseme data
-        viseme_data = self.load_viseme_data(item.viseme_file)
-        
-        # Set up audio in OBS
-        audio_duration = 0
-        if self.obs_client.authenticated:
-            # Set the media source file and trigger playback
-            await self.obs_client.set_media_source(self.audio_source_name, item.audio_file)
-            await self.obs_client.trigger_media_restart(self.audio_source_name)
-            audio_duration = self.audio_manager.start_audio_tracking(item.audio_file)
-        else:
-            # Fallback: just track duration without OBS
-            audio_duration = self.audio_manager.start_audio_tracking(item.audio_file)
-            print(f"OBS not available - simulating audio playback for {audio_duration:.2f}s")
-        
-        if audio_duration == 0:
-            return
-        
-        # Synchronize visemes with audio
-        start_time = time.time()
-        viseme_index = 0
-        
-        while self.audio_manager.is_audio_playing() and viseme_index < len(viseme_data):
-            current_time = time.time() - start_time
-            
-            # Check if it's time for the next viseme
-            if viseme_index < len(viseme_data):
-                viseme_timestamp, viseme_type = viseme_data[viseme_index]
-                
-                if current_time >= viseme_timestamp:
-                    if self.vts_api.authenticated:
-                        await self.vts_api.send_viseme(viseme_type)
-                    else:
-                        print(f"Viseme at {current_time:.2f}s: {viseme_type}")
-                    viseme_index += 1
-            
-            await asyncio.sleep(0.01)  # Small delay to prevent CPU overload
-        
-        # Reset mouth to neutral position
-        if self.vts_api.authenticated:
-            await self.vts_api.send_viseme("")
-        
-        # Stop audio tracking
-        self.audio_manager.stop_audio_tracking()
-        print(f"Finished playing: {item.audio_file}")
-    
-    async def run_playback_loop(self):
-        """Main playback loop"""
-        print("Starting news playback loop...")
-        
-        while self.is_running:
-            try:
-                # Get next item from queue (blocks if empty)
-                if not self.news_queue.empty():
-                    priority_value, sequence_number, item = self.news_queue.get(timeout=1)
-                    self.current_item = item
-                    
-                    await self.play_news_item(item)
-                    
-                    self.current_item = None
-                    self.news_queue.task_done()
-                else:
-                    await asyncio.sleep(0.1)
-                    
-            except queue.Empty:
-                await asyncio.sleep(0.1)
-            except Exception as e:
-                print(f"Error in playback loop: {e}")
-                await asyncio.sleep(1)
-    
-    async def start(self):
-        """Start the news streamer"""
-        if not await self.initialize():
-            print("Failed to initialize VTuber Studio connection")
-            return
-        
-        self.is_running = True
-        await self.run_playback_loop()
-    
-    async def stop(self):
-        """Stop the news streamer"""
-        self.is_running = False
-        self.stop_current_playback()
-        await self.vts_api.disconnect()
-        await self.obs_client.disconnect()
-        print("News streamer stopped")
+    print(f"Loaded {len(visemes)} visemes from {viseme_file}")
+    return visemes
 
-# Test script
-async def main():
-    streamer = NewsStreamer()
+def rhubarb_to_vtube_viseme(rhubarb_viseme):
+    """Convert rhubarb viseme to VTube Studio viseme"""
+    mapping = {
+        'A': 'a',      # open mouth
+        'B': 'i',      # closed mouth
+        'C': 'u',      # rounded mouth
+        'D': 'd',      # tongue up
+        'E': 'e',      # slightly open
+        'F': 'f',      # lower lip up
+        'G': 'k',      # back of tongue up
+        'H': 'n',      # tongue tip up
+        'X': 'sil'     # silence/neutral
+    }
+    return mapping.get(rhubarb_viseme, 'sil')
+
+def connect_to_vtube_studio():
+    """Connect to VTube Studio and authenticate"""
+    global AUTH_TOKEN, WS_CONNECTION
     
-    # Check if test files exist
-    audio_dir = "output/audio"
-    viseme_dir = "output/viseme"
+    try:
+        print("Connecting to VTube Studio...")
+        WS_CONNECTION = websocket.create_connection(VTUBE_STUDIO_URL, timeout=5)
+        
+        # Request authentication token
+        auth_request = {
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": str(uuid.uuid4()),
+            "messageType": "AuthenticationTokenRequest",
+            "data": {
+                "pluginName": PLUGIN_NAME,
+                "pluginDeveloper": PLUGIN_DEVELOPER
+            }
+        }
+        
+        WS_CONNECTION.send(json.dumps(auth_request))
+        response = json.loads(WS_CONNECTION.recv())
+        
+        if response["messageType"] == "AuthenticationTokenResponse":
+            AUTH_TOKEN = response["data"]["authenticationToken"]
+            print(f"✓ Authentication token received")
+            print("⚠️  Please click 'Allow' in VTube Studio to authorize this plugin")
+            
+            # Authenticate with token
+            auth_login = {
+                "apiName": "VTubeStudioPublicAPI",
+                "apiVersion": "1.0",
+                "requestID": str(uuid.uuid4()),
+                "messageType": "AuthenticationRequest",
+                "data": {
+                    "pluginName": PLUGIN_NAME,
+                    "pluginDeveloper": PLUGIN_DEVELOPER,
+                    "authenticationToken": AUTH_TOKEN
+                }
+            }
+            
+            time.sleep(3)  # Wait for user to click allow
+            
+            WS_CONNECTION.send(json.dumps(auth_login))
+            response = json.loads(WS_CONNECTION.recv())
+            
+            if response["messageType"] == "AuthenticationResponse" and response["data"]["authenticated"]:
+                print("✓ Successfully authenticated with VTube Studio!")
+                return True
+            else:
+                print("✗ Authentication failed. Make sure to click 'Allow' in VTube Studio")
+                return False
+        else:
+            print(f"✗ Token request failed: {response}")
+            return False
+            
+    except Exception as e:
+        print(f"✗ Failed to connect to VTube Studio: {e}")
+        return False
+
+def connect_to_obs():
+    """Connect to OBS WebSocket"""
+    global OBS_CONNECTION
     
-    if not os.path.exists(audio_dir) or not os.path.exists(viseme_dir):
-        print(f"Please ensure {audio_dir} and {viseme_dir} directories exist with test files")
+    try:
+        print("Connecting to OBS...")
+        # OBS_CONNECTION = websocket.create_connection(OBS_URL, timeout=5)
+        OBS_CONNECTION = obs.ReqClient(host=WINDOWS_IP, port=OBS_PORT, password = OBS_PASSWORD)
+        print("flag 1")
+
+        # scene = OBS_CONNECTION.call(requests.GetCurrentProgramScene())
+        # Get OBS version info
+        print("flag 2")
+        # print(scene)
+        
+        
+
+        # print("Current scene:", scene.getName())
+        return True
+        
+        """
+        version_request = {
+            "op": 6,  # Request
+            "d": {
+                "requestType": "GetVersion",
+                "requestId": str(uuid.uuid4())
+            }
+        }
+        
+        
+        OBS_CONNECTION.send(json.dumps(version_request))
+        response = json.loads(OBS_CONNECTION.recv())
+        
+        if response["op"] == 7:  # RequestResponse
+            print("✓ Successfully connected to OBS!")
+            return True
+        else:
+            print(f"✗ OBS connection failed: {response}")
+            return False
+        """
+            
+    except Exception as e:
+        print(f"✗ Failed to connect to OBS: {e}")
+        print(type(e))
+        print(e.args)
+        print(str(e))
+        return False
+
+def play_audio_in_obs(audio_file):
+    """Send audio file to OBS to play"""
+    global OBS_CONNECTION
+    
+    if not OBS_CONNECTION:
+        print("  ✗ No OBS connection")
+        return 0
+    
+    try:
+        # Method 1: Use OBS Media Source
+        # This assumes you have a media source called "AudioPlayer" in OBS
+
+        full_path_audio = os.path.abspath(audio_file)
+
+        OBS_CONNECTION.set_input_settings(name="AudioPlayer", settings={"local_file": WSL_PREFIX + full_path_audio}, overlay=True)
+        OBS_CONNECTION.trigger_media_input_action(name="AudioPlayer", action="OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART")
+        print("playing audio")
+        print("is it working")
+
+        try:
+            duration = get_wav_duration(audio_file)
+            return duration
+        except:
+            print("couldn't get duration")
+            return 5.0
+ 
+
+        """
+        media_request = {
+            "op": 6,
+            "d": {
+                "requestType": "SetInputSettings",
+                "requestId": str(uuid.uuid4()),
+                "requestData": {
+                    "inputName": "AudioPlayer",
+                    "inputSettings": {
+                        "local_file": str(Path(audio_file).absolute()),
+                        "restart_on_activate": True
+                    }
+                }
+            }
+        }
+        
+        OBS_CONNECTION.send(json.dumps(media_request))
+        response = json.loads(OBS_CONNECTION.recv())
+        
+        if response["op"] == 7:  # RequestResponse
+            print(f"✓ Audio sent to OBS: {audio_file}")
+            
+            # Get duration using ffprobe if available
+            try:
+                result = subprocess.run([
+                    'ffprobe', '-v', 'quiet', '-show_entries', 
+                    'format=duration', '-of', 'csv=p=0', audio_file
+                ], capture_output=True, text=True)
+                duration = float(result.stdout.strip())
+                return duration
+            except:
+                print("  ⚠️  Could not get audio duration, using 5s default")
+                return 5.0
+        else:
+            print(f"  ✗ Failed to send audio to OBS: {response}")
+            return 0
+    """
+            
+    except Exception as e:
+        print(f"  ✗ Error sending audio to OBS: {e}")
+        return 0
+
+def send_viseme_to_vtube_studio(viseme):
+    """Send Rhubarb lip sync viseme data to VTube Studio"""
+    global WS_CONNECTION, AUTH_TOKEN
+    
+    if not WS_CONNECTION:
+        print("✗ No WebSocket connection available")
+        return False
+    
+    if not AUTH_TOKEN:
+        print("✗ No authentication token available")
+        return False
+    
+    print(f"  → Viseme: {viseme}")
+    
+    try:
+        # Rhubarb lip sync viseme categories mapped to VTube Studio vowel parameters
+        # Using the standard VTube Studio mouth parameters: ParamA, ParamI, ParamU, ParamE, ParamO
+        rhubarb_to_expression = {
+            'X': {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.0, 'ParamO': 0.0},  # Silence
+            'A': {'ParamA': 1.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.0, 'ParamO': 0.0},  # Open vowels (ah)
+            'B': {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.0, 'ParamO': 0.0},  # Closed mouth (p, b, m)
+            'C': {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.8, 'ParamO': 0.0},  # Mid vowels (e, eh)
+            'D': {'ParamA': 0.6, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.3, 'ParamO': 0.0},  # Mixed (ai, ay)
+            'E': {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.9, 'ParamE': 0.0, 'ParamO': 0.0},  # Rounded (oo, uw)
+            'F': {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.4, 'ParamO': 0.0},  # Narrow (f, v)
+            'G': {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.2, 'ParamO': 0.0},  # Tongue/teeth (k, g, t, d)
+            'H': {'ParamA': 0.0, 'ParamI': 0.7, 'ParamU': 0.0, 'ParamE': 0.0, 'ParamO': 0.0}   # Narrow front (i, ih)
+        }
+        
+        # Get expression values for this Rhubarb viseme
+        expression_values = rhubarb_to_expression.get(viseme, {'ParamA': 0.0, 'ParamI': 0.0, 'ParamU': 0.0, 'ParamE': 0.0, 'ParamO': 0.0})
+        
+        # Send parameter injection request to VTube Studio
+        param_request = {
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": str(uuid.uuid4()),
+            "messageType": "InjectParameterDataRequest",
+            "data": {
+                "faceFound": True,
+                "mode": "set",
+                "parameterValues": [
+                    {
+                        "id": param_name,
+                        "value": value
+                    }
+                    for param_name, value in expression_values.items()
+                ]
+            }
+        }
+        WS_CONNECTION.send(json.dumps(param_request))
+        # Optional: Wait for response to confirm success
+        try:
+            response = json.loads(WS_CONNECTION.recv())
+            if response["messageType"] == "InjectParameterDataResponse":
+                return True
+            else:
+                print(f"    ⚠ Unexpected response: {response}")
+                return False
+        except Exception as e:
+            print(f"    ⚠ Response error: {e}")
+            return False
+        
+    except Exception as e:
+        print(f"    ✗ Error sending viseme: {e}")
+        return False
+
+def play_visemes(visemes, start_time):
+    """Play visemes in sync with audio"""
+    for timestamp, rhubarb_viseme in visemes:
+        target_time = start_time + timestamp
+        current_time = time.time()
+        
+        if target_time > current_time:
+            time.sleep(target_time - current_time)
+        
+        vtube_viseme = rhubarb_to_vtube_viseme(rhubarb_viseme)
+        send_viseme_to_vtube_studio(vtube_viseme)
+
+def play_story(story_num):
+    """Play a single story (audio in OBS + visemes in VTube Studio)"""
+    audio_file = f"./output/audio/{story_num}.wav"
+    viseme_file = f"./output/viseme/{story_num}.txt"
+    
+    print(f"\n=== Playing Story {story_num} ===")
+    
+    # Load viseme data
+    visemes = load_viseme_data(viseme_file)
+    
+    # Start audio in OBS
+    start_time = time.time()
+    duration = play_audio_in_obs(audio_file)
+    
+    if duration > 0:
+        # Start viseme playback
+        if visemes:
+            viseme_thread = threading.Thread(target=play_visemes, args=(visemes, start_time))
+            viseme_thread.daemon = True
+            viseme_thread.start()
+        
+        # Wait for audio to finish
+        time.sleep(duration)
+        time.sleep(0.5)  # Small gap between stories
+    
+    print(f"Story {story_num} completed")
+
+def cleanup():
+    """Clean up connections"""
+    global WS_CONNECTION, OBS_CONNECTION
+    
+    if WS_CONNECTION:
+        try:
+            WS_CONNECTION.close()
+            print("✓ Disconnected from VTube Studio")
+        except:
+            pass
+    
+    if OBS_CONNECTION:
+        try:
+            OBS_CONNECTION.close()
+            print("✓ Disconnected from OBS")
+        except:
+            pass
+
+def main():
+    # Connect to services
+    vtube_connected = connect_to_vtube_studio()
+    obs_connected = connect_to_obs()
+    
+    if not vtube_connected and not obs_connected:
+        print("Failed to connect to both VTube Studio and OBS. Exiting...")
+        return
+    if not obs_connected:
+        print("Faile to connect obs")
+        return
+   
+    if not vtube_connected:
+        print("Faile to connect vtube")
         return
     
-    # Add test news items
-    test_items = [
-        ("1.wav", "1.txt", Priority.NORMAL),
-        ("2.wav", "2.txt", Priority.NORMAL),
-        ("3.wav", "3.txt", Priority.NORMAL),
-    ]
+    print("Starting audio + viseme test...")
+    print("NOTE: Make sure you have a Media Source called 'AudioPlayer' in OBS")
     
-    for audio, viseme, priority in test_items:
-        audio_path = os.path.join(audio_dir, audio)
-        viseme_path = os.path.join(viseme_dir, viseme)
+    # Play all 3 stories in succession
+    for story_num in range(1, 4):
+        audio_file = f"./output/audio/{story_num}.wav"
         
-        if os.path.exists(audio_path) and os.path.exists(viseme_path):
-            streamer.add_news_item(audio_path, viseme_path, priority)
-        else:
-            print(f"Missing files: {audio_path} or {viseme_path}")
+        if not Path(audio_file).exists():
+            print(f"Warning: Audio file {audio_file} not found, skipping story {story_num}")
+            continue
+            
+        play_story(story_num)
     
-    # Start the streamer
-    try:
-        # Run for a bit, then test breaking news
-        streamer_task = asyncio.create_task(streamer.start())
-        
-        # Wait a bit then inject breaking news
-        await asyncio.sleep(5)
-        
-        # Test breaking news injection
-        breaking_audio = os.path.join(audio_dir, "2.wav")  # Use existing file for test
-        breaking_viseme = os.path.join(viseme_dir, "2.txt")
-        
-        if os.path.exists(breaking_audio) and os.path.exists(breaking_viseme):
-            streamer.add_breaking_news(breaking_audio, breaking_viseme)
-        
-        # Let it run for a while
-        await asyncio.sleep(30)
-        
-    except KeyboardInterrupt:
-        print("\nStopping streamer...")
-    finally:
-        await streamer.stop()
+    print("\nAll stories completed!")
+    cleanup()
 
 if __name__ == "__main__":
-    print("VTuber News Streamer Tester")
-    print("===========================")
-    print(f"WSL → Windows setup - connecting to Windows host at {WINDOWS_HOST_IP}")
-    print("Make sure VTuber Studio is running and API is enabled!")
-    print("Make sure OBS is running with WebSocket server enabled!")
-    print("Create a Media Source named 'NewsAudio' in OBS!")
-    print("Press Ctrl+C to stop")
-    print()
-    
-    asyncio.run(main())
+    main()
