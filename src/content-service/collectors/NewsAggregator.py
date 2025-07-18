@@ -11,19 +11,16 @@ class NewsAggregator:
     """
     Main aggregation service that can use different strategies
     """
-    def __init__(self, strategies: List[NewsAggregationStrategy] = None):
+    def __init__(self,  sources = [
+    "https://www.apnews.com",
+    "https://www.npr.org"
+], strategies: List[NewsAggregationStrategy] = None):
+        self.sources = sources
         self.strategies = strategies or [
             NewspaperAggregationStrategy()
         ]
     
-    def add_strategy(self, strategy: NewsAggregationStrategy):
-        """
-        Dynamically add a new aggregation strategy
-        """
-        self.strategies.append(strategy)
-    
-    def aggregate_news(self, 
-                       sources: List[str], 
+    def get_articles(self, 
                        max_articles: int = 10) -> List[NewsArticle]:
         """
         Aggregate news using all available strategies
@@ -32,7 +29,7 @@ class NewsAggregator:
         
         for strategy in self.strategies:
             try:
-                articles = strategy.fetch_articles(sources, max_articles)
+                articles = strategy.fetch_articles(self.sources, max_articles)
                 all_articles.extend(articles)
             except Exception as strategy_error:
                 logging.error(f"Error in strategy {strategy.__class__.__name__}: {strategy_error}")

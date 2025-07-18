@@ -112,11 +112,5 @@ node_modules/
 *.sqlite3
 *.sqlite
 
-
-purgatory/
-.secrets
-*.mp4
-*.mp3
-output/
-test_output_video/
-Kokoro-82M/
+*.env
+.env
