@@ -17,14 +17,15 @@ def main():
     OBS_WEBSOCKET_PASSWORD = os.getenv("OBS_WEBSOCKET_PASSWORD")
     OBS_WEBSOCKET_PORT = os.getenv("OBS_WEBSOCKET_PORT")
 
-    content_service = ContentService()
+    TMP_DIR = ""
+
+    content_service = ContentService(output_path = TMP_DIR)
     staging_service = StagingService( windows_ip=WINDOWS_IP,
                                       vts_port=VTS_PORT,
                                       vts_auth_token=VTS_AUTH_TOKEN,
                                       obs_websocket_password=OBS_WEBSOCKET_PASSWORD,
                                       obs_websocket_port=OBS_WEBSOCKET_PORT)
 
-    content_service.print()
     try:
         while True:
             story_id = content_service.get_story()

@@ -20,4 +20,4 @@ class AudioGenerator:
 
         sf.write(f"{self.audio_path}/{uuid}.wav", audio["audio"], audio["sampling_rate"])
 
-        print("Audio generated and saved as output.wav")
+        print(f"Audio generated and saved as {uuid}.wav")

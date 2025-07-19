@@ -39,17 +39,15 @@ class ContentService:
 
         script = self.generate_script(article['full_text'])
         self.generate_audio_file(script, audio_file_path)
-        self.generate_visemes(viseme_file_path) 
+        self.generate_visemes(viseme_file_path, audio_file_path) 
         
         return uuid
     def generate_script(self, article, context):
         return self.ScriptGenerator.generate(article['full_text'], context)
     def generate_audio_file(self, script, audio_file_path):
         self.AudioGenerator.generate(audio_file_path, script)
-        pass
-    def generate_visemes(self, viseme_file_path):
-        self.VisemeGenerator.generate(viseme_file_path)
-        pass
+    def generate_visemes(self, viseme_file_path, audio_file_path):
+        self.VisemeGenerator.generate(viseme_file_path, audio_file_path)
 
 
     def get_story(self):
