@@ -10,7 +10,7 @@ from datasets import load_dataset
 class AudioGenerator:
     def __init__(self, output_path):
         self.pipe = pipeline("text-to-speech", model="microsoft/speecht5_tts")
-        self.audio_path = output_path + "/audio"
+        self.audio_path = output_path 
 
         embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
         self.speaker_embedding = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0)
