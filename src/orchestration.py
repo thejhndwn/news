@@ -24,7 +24,7 @@ def main():
                                       obs_websocket_password=OBS_WEBSOCKET_PASSWORD,
                                       obs_websocket_port=OBS_WEBSOCKET_PORT)
 
-
+    content_service.print()
     try:
         while True:
             story_id = content_service.get_story()

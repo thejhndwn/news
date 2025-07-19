@@ -5,12 +5,13 @@ import uuid
 class VTS:
 
     def __init__(self, auth_token: str, port: str, windows_ip: str):
+        self.VTS = None
         is_connected = self.connect(windows_ip=windows_ip, vts_auth_token=auth_token, vts_port=port)
 
         if not is_connected:
             raise ConnectionError("Failed to connect and authenticate with VTube Studio.")
         
-        
+
     
     def connect(self, windows_ip: str, vts_auth_token: str, vts_port: str):
         vtube_studio_url = f"ws://{windows_ip}:{vts_port}"
@@ -48,3 +49,33 @@ class VTS:
 
         return True
     
+    def send_viseme(self, viseme: str):
+        request = {
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": str(uuid.uuid4()),
+            "messageType": "InjectParameterDataRequest",
+            "data": {
+                "parameterGroup": "LipSync",
+                "parameterName": viseme,
+                "parameterValue": 1.0
+            }
+        }
+
+        try:
+            self.VTS.send(json.dumps(request))
+            response = json.loads(self.VTS.recv())
+            return response
+        except Exception as e:
+            print(f"Failed to send request to VTube Studio: {e}")
+            return None
+    
+    def close(self):
+        if self.VTS:
+            try:
+                self.VTS.close()
+                print("Closed connection to VTube Studio.")
+            except Exception as e:
+                print(f"Error closing connection to VTube Studio: {e}")
+            finally:
+                self.VTS = None
