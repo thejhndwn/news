@@ -2,9 +2,8 @@ from collectors.NewsAggregator import NewsAggregator
 
 class ContentService:
 
-    def __init__(self, seen_stories_file, content_queue_size = 10):
+    def __init__(self, content_queue_size = 10):
         self.queue = []
-        self.seen_stories_file = seen_stories_file
         self.NewsAggregator = NewsAggregator()
         
         self.queue = self.NewsAggregator.get_stories(content_queue_size)

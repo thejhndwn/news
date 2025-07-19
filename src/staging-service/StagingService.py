@@ -1,29 +1,21 @@
 import time
+import uuid
 import threading
+import json
+import websocket
+
+from staging_service.OBS import OBS
+from staging_service.VTS import VTS
 
 class StagingService:
+    PLUGIN_NAME = "NewsAvatar"
+    PLUGIN_DEVELOPER = "thejhndwn"
+
+    def __init__(self, windows_ip: str, vts_port: str, vts_auth_token: str, obs_websocket_password: str, obs_websocket_port: str):
+        self.OBS = OBS(windows_ip=windows_ip, obs_websocket_password=obs_websocket_password, obs_websocket_port=obs_websocket_port)
+        self.VTS = VTS(auth_token=vts_auth_token, port=vts_port, windows_ip=windows_ip)
 
 
-    def __init__(self):
-        self.OBS = None
-        self.VTS = None
-
-        vts_connected = self.connect_to_vts()
-        obs_connected = self.connect_to_obs()
-
-        if not vts_connected or not obs_connected:
-            print(f"Something failed to connect...OBS:{obs_connected}, VTS:{vts_connected}") 
-
-
-    def connect_to_vts():
-        
-
-
-        return True
-
-    def connect_to_obs():
-        return True
-    
     def play_story(self, uuid: str):
         audio_file = ''
         viseme_file = ''
@@ -46,10 +38,25 @@ class StagingService:
     def play_audio_in_obs():
         pass
 
-    def play_visemes():
-        pass
+    def play_visemes(visemes, start_time):
+        """Play visemes in sync with audio"""
+        for timestamp, rhubarb_viseme in visemes:
+            target_time = start_time + timestamp
+            current_time = time.time()
+            
+            if target_time > current_time:
+                time.sleep(target_time - current_time)
+            
+            vtube_viseme = rhubarb_to_vtube_viseme(rhubarb_viseme)
+            send_viseme_to_vtube_studio(vtube_viseme)
 
     def get_wave_duration():
+        pass
+
+    def rhubarb_to_vtube_viseme(rhubarb_viseme):
+        pass
+
+    def send_viseme_to_vtube_studio(vtube_viseme):
         pass
 
 

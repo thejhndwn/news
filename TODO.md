@@ -1,0 +1,1 @@
+- make OBS and VTS classes, rather than having all that logic embedded in the staging service
