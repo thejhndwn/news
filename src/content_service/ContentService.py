@@ -1,9 +1,10 @@
 from uuid import uuid4
-from collectors.NewsAggregator import NewsAggregator
 
-from ..audio_viseme_service.AudioGenerator import AudioGenerator
-from ..audio_viseme_service.VisemeGenerator import VisemeGenerator
-from ..audio_viseme_service.ScriptGenerator import ScriptGenerator
+from content_service.news_aggregator_service.NewsAggregator import NewsAggregator
+
+from content_service.audio_viseme_service.AudioGenerator import AudioGenerator
+from content_service.audio_viseme_service.VisemeGenerator import VisemeGenerator
+from content_service.audio_viseme_service.ScriptGenerator import ScriptGenerator
 
 '''
 ContentService.queue will always be processed. 
@@ -21,7 +22,7 @@ class ContentService:
         self.AudioGenerator = AudioGenerator()
         self.ScriptGenerator = ScriptGenerator()
         self.VisemeGenerator = VisemeGenerator()
-        articles = self.NewsAggregator.get_stories(content_queue_size)
+        articles = self.NewsAggregator.get_articles(content_queue_size)
 
         # process all stories
         for article in articles:
@@ -34,16 +35,16 @@ class ContentService:
 
         audio_file_path = self.output_path + f"/audio/{uuid}.wav"
         viseme_file_path = self.output_path + f"/visemes/{uuid}.json"
-        print(f"Processing article: {article['title']} with UUID: {uuid}")
+        print(f"Processing article: {article.title} with UUID: {uuid}")
 
 
-        script = self.generate_script(article['full_text'])
+        script = self.generate_script(article, {} )
         self.generate_audio_file(script, audio_file_path)
         self.generate_visemes(viseme_file_path, audio_file_path) 
         
         return uuid
-    def generate_script(self, article, context):
-        return self.ScriptGenerator.generate(article['full_text'], context)
+    def generate_script(self, article, context = {}):
+        return self.ScriptGenerator.generate(article.full_text)
     def generate_audio_file(self, script, audio_file_path):
         self.AudioGenerator.generate(audio_file_path, script)
     def generate_visemes(self, viseme_file_path, audio_file_path):
@@ -56,7 +57,7 @@ class ContentService:
 
         # do stuff to get a new story, async probably
 
-        article = self.NewsAggregator.get_stories(1)[0]
+        article = self.NewsAggregator.get_articles(1)[0]
         uuid = self.process_article(article)
         self.queue.append(uuid)
         return story_id

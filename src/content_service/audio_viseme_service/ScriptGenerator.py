@@ -4,9 +4,10 @@ class ScriptGenerator:
         # initalize the models and etc.
         pass
     
-    def generate(self, text, context):
+    def generate(self, text, context = {}):
         # generate a script based on story and context
         # first pass, straight up script
         # second pass, add in buffering words
         # third pass, add in context
-        return text
+        print(f"Generating script for text: {text[:2000]}...")
+        return text[:2000]

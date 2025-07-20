@@ -1,6 +1,6 @@
 
 from staging_service.StagingService import StagingService
-from content_service.ContentSerivce import ContentService
+from content_service.ContentService import ContentService
 
 import time
 from dotenv import load_dotenv

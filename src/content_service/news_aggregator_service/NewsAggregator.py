@@ -1,5 +1,4 @@
 from .Strategies.NewsAggregationStrategy import NewsAggregationStrategy
-from .Strategies.RSS import RSSAggregationStrategy
 from .Strategies.Newspaper import NewspaperAggregationStrategy
 from .NewsArticle import NewsArticle
 

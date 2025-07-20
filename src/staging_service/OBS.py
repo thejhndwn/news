@@ -1,4 +1,4 @@
-import obswspython as obs
+import obsws_python as obs
 
 class OBS:
     MEDIA_SOURCE_NAME = "AudioSource"
