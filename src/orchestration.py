@@ -5,7 +5,7 @@ from content_service.ContentService import ContentService
 import time
 from dotenv import load_dotenv
 import os
-
+from pathlib import Path
 
 def main():
 
@@ -17,19 +17,24 @@ def main():
     OBS_WEBSOCKET_PASSWORD = os.getenv("OBS_WEBSOCKET_PASSWORD")
     OBS_WEBSOCKET_PORT = os.getenv("OBS_WEBSOCKET_PORT")
 
-    TMP_DIR = ""
+    current_file = Path(__file__).resolve()
+    project_root = current_file.parent.parent
+    TMP_DIR = project_root / "tmp"
 
     content_service = ContentService(output_path = TMP_DIR)
-    staging_service = StagingService( windows_ip=WINDOWS_IP,
-                                      vts_port=VTS_PORT,
-                                      vts_auth_token=VTS_AUTH_TOKEN,
-                                      obs_websocket_password=OBS_WEBSOCKET_PASSWORD,
-                                      obs_websocket_port=OBS_WEBSOCKET_PORT)
+    staging_service = StagingService(output_path = TMP_DIR,
+                                    windows_ip=WINDOWS_IP,
+                                    vts_port=VTS_PORT,
+                                    vts_auth_token=VTS_AUTH_TOKEN,
+                                    obs_websocket_password=OBS_WEBSOCKET_PASSWORD,
+                                    obs_websocket_port=OBS_WEBSOCKET_PORT)
 
     try:
         while True:
             story_id = content_service.get_story()
-            StagingService.play_story(story_id)
+            if story_id:
+                print("got story_id: ", story_id)
+            staging_service.play_story(story_id)
 
             time.sleep(1) # idle buffer time between stories
     

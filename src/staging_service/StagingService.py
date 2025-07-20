@@ -10,14 +10,19 @@ class StagingService:
     PLUGIN_NAME = "NewsAvatar"
     PLUGIN_DEVELOPER = "thejhndwn"
 
-    def __init__(self, windows_ip: str, vts_port: str, vts_auth_token: str, obs_websocket_password: str, obs_websocket_port: str):
+    def __init__(self, output_path, windows_ip: str, vts_port: str, vts_auth_token: str, obs_websocket_password: str, obs_websocket_port: str):
+        print("Initializing Staging Service...")
+        self.output_path = output_path
+        self.audio_path = output_path / "audio"
+        self.viseme_path = output_path / "viseme"
+
         self.OBS = OBS(windows_ip=windows_ip, obs_websocket_password=obs_websocket_password, obs_websocket_port=obs_websocket_port)
         self.VTS = VTS(auth_token=vts_auth_token, port=vts_port, windows_ip=windows_ip)
 
 
     def play_story(self, uuid: str):
-        audio_file = ''
-        viseme_file = ''
+        audio_file = self.audio_path / f"{uuid}.wav"
+        viseme_file = self.viseme_path / f"{uuid}.json"
 
         visemes = self.load_viseme(viseme_file)
         duration = self.get_wav_duration(audio_file)

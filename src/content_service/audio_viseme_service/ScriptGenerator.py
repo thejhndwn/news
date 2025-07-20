@@ -9,5 +9,5 @@ class ScriptGenerator:
         # first pass, straight up script
         # second pass, add in buffering words
         # third pass, add in context
-        print(f"Generating script for text: {text[:2000]}...")
-        return text[:2000]
+        print(f"Generating script for text: {text[:200]}...")
+        return text[:200]

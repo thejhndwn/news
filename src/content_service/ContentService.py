@@ -33,10 +33,9 @@ class ContentService:
     def process_article(self, article):
         uuid = uuid4()
 
-        audio_file_path = self.output_path + f"/audio/{uuid}.wav"
-        viseme_file_path = self.output_path + f"/visemes/{uuid}.json"
+        audio_file_path = self.output_path / f"audio/{uuid}.wav"
+        viseme_file_path = self.output_path / f"viseme/{uuid}.json"
         print(f"Processing article: {article.title} with UUID: {uuid}")
-
 
         script = self.generate_script(article, {} )
         self.generate_audio_file(script, audio_file_path)
@@ -61,6 +60,15 @@ class ContentService:
         uuid = self.process_article(article)
         self.queue.append(uuid)
         return story_id
+    
+    # if there is existing content, not deleted then load it into the queue
+    def load_content(self, content_dir, file_extension = ".txt"):
+        # get a list of all files in the content_dir, take there names minus the extension and add them to self.queue
+        from pathlib import Path
+        content_dir = Path(content_dir)
+        for file in content_dir.glob(f"*{file_extension}"):
+            self.queue.append(file.stem)
+
     
     def print(self):
         print(self.queue)
