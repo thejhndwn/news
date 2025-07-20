@@ -22,7 +22,12 @@ class ContentService:
         self.AudioGenerator = AudioGenerator()
         self.ScriptGenerator = ScriptGenerator()
         self.VisemeGenerator = VisemeGenerator()
-        articles = self.NewsAggregator.get_articles(content_queue_size)
+
+        # load existing content from viseme directory, grabbing the UUID file names, 
+        # then subtract the difference and get_articles
+        self.load_content(output_path / "viseme", file_extension=".json")
+        print(f"Loaded {len(self.queue)} existing content items")
+        articles = self.NewsAggregator.get_articles(content_queue_size - len(self.queue))
 
         # process all stories
         for article in articles:

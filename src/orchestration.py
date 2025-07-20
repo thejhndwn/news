@@ -20,6 +20,9 @@ def main():
     current_file = Path(__file__).resolve()
     project_root = current_file.parent.parent
     TMP_DIR = project_root / "tmp"
+    # check if tmp_dir/audio and tmp_dir/viseme exist, if not create them
+    (TMP_DIR / "audio").mkdir(parents=True, exist_ok=True)
+    (TMP_DIR / "viseme").mkdir(parents=True, exist_ok=True)
 
     content_service = ContentService(output_path = TMP_DIR)
     staging_service = StagingService(output_path = TMP_DIR,

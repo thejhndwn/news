@@ -24,6 +24,8 @@ class NewsAggregator:
         """
         Aggregate news using all available strategies
         """
+        if max_articles <= 0:
+            return []
         all_articles = []
         
         for strategy in self.strategies:

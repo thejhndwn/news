@@ -3,6 +3,8 @@ import websocket
 import uuid
 
 class VTS:
+    PLUGIN_NAME = "NewsAvatar"
+    PLUGIN_DEVELOPER = "thejhndwn"
 
     def __init__(self, auth_token: str, port: str, windows_ip: str):
         self.VTS = None
