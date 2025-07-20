@@ -30,7 +30,7 @@ class VTS:
             "requestID": str(uuid.uuid4()),
             "messageType": "AuthenticationRequest",
             "data": {
-                "authToken": vts_auth_token,
+                "authenticationToken": vts_auth_token,
                 "pluginName": self.PLUGIN_NAME,
                 "pluginDeveloper": self.PLUGIN_DEVELOPER,
             }
@@ -39,7 +39,7 @@ class VTS:
         try:
             self.VTS.send(json.dumps(auth_login))
             response = json.loads(self.VTS.recv())
-            if response.get("messageType") == "AuthenticationResponse" and response.get("success"):
+            if response.get("messageType") == "AuthenticationResponse" and response.get("data").get("authenticated"):
                 print("Successfully authenticated with VTube Studio.")
                 return True
             else:
