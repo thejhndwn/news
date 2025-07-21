@@ -60,7 +60,8 @@ class ContentService:
         story_id = self.queue.pop()
 
         # do stuff to get a new story, async probably
-
+        if len(self.queue) >= 10:
+            return story_id
         article = self.NewsAggregator.get_articles(1)[0]
         uuid = self.process_article(article)
         self.queue.append(uuid)
@@ -78,4 +79,7 @@ class ContentService:
     def print(self):
         print(self.queue)
 
-
+    def cleanup(self):
+        print("Cleaning up Content Service...")
+        # add shutdown generators
+        print("Content Service cleaned up.")

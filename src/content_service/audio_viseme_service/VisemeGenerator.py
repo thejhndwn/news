@@ -9,5 +9,5 @@ class VisemeGenerator:
         # Logic to generate visemes from the provided audio file
         print(f"Generating visemes for {audio_file_path} and saving to {viseme_file_path}")
         # Placeholder for actual viseme generation logic
-        subprocess.run(["rhubarb", "-o", str(viseme_file_path), str(audio_file_path)], check=True)
+        subprocess.run(["rhubarb", "--extendedShapes", "", "-o", str(viseme_file_path), str(audio_file_path)], check=True)
 

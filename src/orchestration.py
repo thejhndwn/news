@@ -16,11 +16,13 @@ def main():
     VTS_AUTH_TOKEN = os.getenv("VTS_AUTH_TOKEN")
     OBS_WEBSOCKET_PASSWORD = os.getenv("OBS_WEBSOCKET_PASSWORD")
     OBS_WEBSOCKET_PORT = os.getenv("OBS_WEBSOCKET_PORT")
+    TWITCH_KEY = os.getenv("TWITCH_KEY")
 
     current_file = Path(__file__).resolve()
     project_root = current_file.parent.parent
     TMP_DIR = project_root / "tmp"
     # check if tmp_dir/audio and tmp_dir/viseme exist, if not create them
+    (TMP_DIR).mkdir(parents=True, exist_ok=True)
     (TMP_DIR / "audio").mkdir(parents=True, exist_ok=True)
     (TMP_DIR / "viseme").mkdir(parents=True, exist_ok=True)
 
@@ -30,9 +32,11 @@ def main():
                                     vts_port=VTS_PORT,
                                     vts_auth_token=VTS_AUTH_TOKEN,
                                     obs_websocket_password=OBS_WEBSOCKET_PASSWORD,
-                                    obs_websocket_port=OBS_WEBSOCKET_PORT)
+                                    obs_websocket_port=OBS_WEBSOCKET_PORT,
+                                    twitch_key=TWITCH_KEY)
 
     try:
+        staging_service.start_streaming()
         while True:
             story_id = content_service.get_story()
             if story_id:
@@ -48,7 +52,8 @@ def main():
         # cleanup
         content_service.cleanup()
         staging_service.cleanup()
-    
+        # clean up tmp_dir
+
 
 
 

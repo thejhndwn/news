@@ -1,4 +1,5 @@
 import json
+import time
 import websocket
 import uuid
 
@@ -51,26 +52,39 @@ class VTS:
 
         return True
     
-    def send_viseme(self, viseme: str):
+    def send_expression(self, expression_file: str, fade_time: float = 0.5):
         request = {
             "apiName": "VTubeStudioPublicAPI",
             "apiVersion": "1.0",
             "requestID": str(uuid.uuid4()),
-            "messageType": "InjectParameterDataRequest",
+            "messageType": "ExpressionActivationRequest",
             "data": {
-                "parameterGroup": "LipSync",
-                "parameterName": viseme,
-                "parameterValue": 1.0
+                "expressionFile": expression_file,
+                "fadeTime": fade_time,
+                "active": True
             }
         }
 
-        try:
-            self.VTS.send(json.dumps(request))
-            response = json.loads(self.VTS.recv())
-            return response
-        except Exception as e:
-            print(f"Failed to send request to VTube Studio: {e}")
-            return None
+        off_request = {
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": str(uuid.uuid4()),
+            "messageType": "ExpressionActivationRequest",
+            "data": {
+                "expressionFile": expression_file,
+                "fadeTime": fade_time,
+                "active": False
+            }
+        }
+
+        self.VTS.send(json.dumps(request))
+        response = json.loads(self.VTS.recv())
+        # wait a bit before sending the off request to allow VTS to register the expression
+        time.sleep(0.1)
+        self.VTS.send(json.dumps(off_request))
+        response = json.loads(self.VTS.recv())
+        
+            
     
     def close(self):
         if self.VTS:
