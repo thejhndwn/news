@@ -6,6 +6,7 @@ import time
 from dotenv import load_dotenv
 import os
 from pathlib import Path
+import argparse
 
 def main():
 
@@ -17,6 +18,11 @@ def main():
     OBS_WEBSOCKET_PASSWORD = os.getenv("OBS_WEBSOCKET_PASSWORD")
     OBS_WEBSOCKET_PORT = os.getenv("OBS_WEBSOCKET_PORT")
     TWITCH_KEY = os.getenv("TWITCH_KEY")
+
+    parser = argparse.ArgumentParser(description= " blank text")
+
+    parser.add_argument('-s', '--stream', action = 'store_true', help= "stop streaming")
+    args = parser.parse_args()
 
     current_file = Path(__file__).resolve()
     project_root = current_file.parent.parent
@@ -36,7 +42,8 @@ def main():
                                     twitch_key=TWITCH_KEY)
 
     try:
-        staging_service.start_streaming()
+        if not args.stream:
+            staging_service.start_streaming()
         while True:
             story_id = content_service.get_story()
             if story_id:
