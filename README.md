@@ -1,6 +1,6 @@
 # news
 
-# methologies
+j methologies
 ## audio
 [coquitts](https://github.com/coqui-ai/TTS)
 
