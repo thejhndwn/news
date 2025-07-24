@@ -1,15 +1,21 @@
 from content_service.news_aggregator_service.NewsArticle import NewsArticle   
-import ollama
+from transformers import pipeline
 from transformers import AutoTokenizer
 
 class ScriptGenerator:
-    def __init__(self, model = "llama3.1:8b"):
+    def __init__(self, model = "Qwen/Qwen2.5-7B-Instruct"):
         # initalize the models and etc.
         self.model = model
-        tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B")
+        self.pipe = pipeline(
+                "text-generation",
+                model=self.model,
+                torch_dtype="auto",
+                device_map="auto"
+        )
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model)
     
     def generate(self, article: NewsArticle, context = {}):
-       prompt = f"""
+        prompt = f"""
             Given this news article:
             Title: {article.title}
             Body: {article.full_text}
@@ -19,9 +25,12 @@ class ScriptGenerator:
             - Conclusion (1–2 sentences)
             Keep it in a conversational tone suitable for a general audience.
             """ 
-       try:
-           response = ollama.generate(model = self.model, prompt = prompt)
-           return response['response']
-       except Exception as e:
-           print("There was a problem generating the script")
-           return "Error"
+        messages = [{"role": "user", "content": prompt}]
+        response = self.pipe(messages,
+                             max_new_tokens = 1000,
+                             temperature = 0.7,
+                             do_sample = True
+                             )
+
+
+        return response[0]['generated_text'][-1]['content']

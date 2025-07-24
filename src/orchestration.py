@@ -43,6 +43,7 @@ def main():
 
     try:
         if not args.stream:
+            print("we are streaming btw")
             staging_service.start_streaming()
         while True:
             story_id = content_service.get_story()
