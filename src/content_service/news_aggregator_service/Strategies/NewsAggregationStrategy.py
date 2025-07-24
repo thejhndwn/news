@@ -8,9 +8,8 @@ class NewsAggregationStrategy(ABC):
     Defines the interface for different news gathering techniques
     """
     @abstractmethod
-    def fetch_articles(self, 
-                       sources: List[str], 
-                       max_articles: int = 10) -> List[NewsArticle]:
+    def get_articles(self, 
+                       sources: List[str]) -> List[NewsArticle]:
         """
         Fetch articles using a specific strategy
         

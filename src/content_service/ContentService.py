@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from content_service.news_aggregator_service.NewsAggregator import NewsAggregator
+from content_service.news_aggregator_service.Strategies.Newspaper import NewspaperAggregationStrategy
 
 from content_service.audio_viseme_service.AudioGenerator import AudioGenerator
 from content_service.audio_viseme_service.VisemeGenerator import VisemeGenerator
@@ -14,12 +15,13 @@ TODO: make processing async, so we can process while staging is happening
 '''
 class ContentService:
 
-    def __init__(self, output_path, content_queue_size = 10):
+    def __init__(self, output_path, tmp_dir, content_queue_size = 10):
         print("Initializing Content Service...")
         self.queue = []
         self.output_path = output_path
-        self.NewsAggregator = NewsAggregator()
-        self.AudioGenerator = AudioGenerator()
+        self.tmp_dir = tmp_dir
+        self.NewsAggregator = NewspaperAggregationStrategy()
+        self.AudioGenerator = AudioGenerator(tmp_dir)
         self.ScriptGenerator = ScriptGenerator()
         self.VisemeGenerator = VisemeGenerator()
 
@@ -43,14 +45,15 @@ class ContentService:
         print(f"Processing article: {article.title} with UUID: {uuid}")
 
         script = self.generate_script(article, {} )
+        print("this is the script:", script)
         self.generate_audio_file(script, audio_file_path)
         self.generate_visemes(viseme_file_path, audio_file_path) 
         
         return uuid
     def generate_script(self, article, context = {}):
-        return self.ScriptGenerator.generate(article.full_text)
+        return self.ScriptGenerator.generate(article)
     def generate_audio_file(self, script, audio_file_path):
-        self.AudioGenerator.generate(audio_file_path, script)
+        self.AudioGenerator.generate_long_audio(script, audio_file_path)
     def generate_visemes(self, viseme_file_path, audio_file_path):
         self.VisemeGenerator.generate(viseme_file_path, audio_file_path)
 

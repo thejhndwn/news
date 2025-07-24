@@ -32,7 +32,7 @@ def main():
     (TMP_DIR / "audio").mkdir(parents=True, exist_ok=True)
     (TMP_DIR / "viseme").mkdir(parents=True, exist_ok=True)
 
-    content_service = ContentService(output_path = TMP_DIR)
+    content_service = ContentService(tmp_dir = TMP_DIR, output_path = TMP_DIR)
     staging_service = StagingService(output_path = TMP_DIR,
                                     windows_ip=WINDOWS_IP,
                                     vts_port=VTS_PORT,

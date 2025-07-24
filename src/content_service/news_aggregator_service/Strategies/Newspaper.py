@@ -8,36 +8,44 @@ import newspaper
 from newspaper import Article
 from newspaper import Config
 
-class NewspaperAggregationStrategy(NewsAggregationStrategy):
-
-    def fetch_articles(self, 
-                    sources: List[str], 
-                    max_articles: int = 10) -> List[NewsArticle]:
-        articles = []
+class NewspaperAggregationStrategy():
+    def __init__(self, 
+                 sources = [
+                    "https://www.apnews.com",
+                    "https://www.npr.org"
+                    ]):
+        print("running up NewspaperAggregationStrategy")
+        self.sources = sources
+        self.articles = self.get_articles_from_source(sources)
         
+
+
+    def get_articles_from_source(self, sources = []) -> List[Article]:
+        articles = []
         for source_url in sources:
             try:
-                # Build source using newspaper
-                source = newspaper.build(source_url, memoize_articles=False)
-                
-                for article in source.articles[:max_articles]:
-                    try:
-                        article.download()
-                        article.parse()
-                        
-                        news_article = NewsArticle(
-                            title=article.title,
-                            url=article.url,
-                            publish_date=article.publish_date or datetime.datetime.now(),
-                            source=source_url,
-                            full_text=article.text
-                        )
-                        articles.append(news_article)
-                    
-                    except Exception as article_error:
-                        logging.error(f"Error processing article from {source_url}: {article_error}")
-            
-            except Exception as source_error:
-                logging.error(f"Error building source {source_url}: {source_error}")
-        
+                source = newspaper.build(source_url, memoize_articles = False)
+                articles.extend(source.articles)
+            except Exception as e:
+                logging.error(f"Error grabbing article from {source_url}")
         return articles
+
+    def get_articles(self, num = 10):
+        if len(self.articles) < num:
+            self.articles.extend(self.get_articles_from_source(self.sources))
+
+        articles = []
+        for a in self.articles[:num]:
+            a.download()
+            a.parse()
+            news_article = NewsArticle(
+                    title = a.title,
+                    url = a.url,
+                    publish_date = str(a.publish_date) or str(datetime.datetime.now()),
+                    full_text = a.text)
+
+            articles.append(news_article)
+        del self.articles[:num]
+        return articles
+
+

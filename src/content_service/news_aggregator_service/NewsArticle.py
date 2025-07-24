@@ -9,8 +9,7 @@ class NewsArticle:
     """
     title: str
     url: str
-    publish_date: datetime
-    source: str
+    publish_date: str 
     full_text: str = ''
 
     @classmethod
@@ -22,6 +21,5 @@ class NewsArticle:
             title=db_article.title,
             url=db_article.url,
             publish_date=db_article.publish_date,
-            source=db_article.source,
             full_text=db_article.full_text
         )
