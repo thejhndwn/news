@@ -83,8 +83,7 @@ class VTS:
         time.sleep(0.1)
         self.VTS.send(json.dumps(off_request))
         response = json.loads(self.VTS.recv())
-        
-            
+
     
     def close(self):
         if self.VTS:

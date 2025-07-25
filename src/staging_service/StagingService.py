@@ -25,6 +25,7 @@ class StagingService:
         viseme_file = str(self.viseme_path / f"{uuid}.json")
 
         visemes = self.load_viseme(viseme_file)
+        # images = self.load_images("")
         duration = self.get_wav_duration(audio_file)
 
         if duration > 0:
@@ -42,6 +43,15 @@ class StagingService:
             os.remove(viseme_file)
         except Exception as e:
             print(f"Error cleaning up files: {e}")
+
+    def load_images(self, images_dir):
+
+        images = []
+        # grab all the images from the tmp/images/{uuid}/{timestamp}.png
+
+        # generate tuple list of timestamp - image file
+
+        return images
 
     def load_viseme(self, viseme_file):
         visemes = []
@@ -81,6 +91,14 @@ class StagingService:
 
             print("BY THE WAY, sending viseme to VTube Studio: ", vtube_expression)
             self.VTS.send_expression(vtube_expression, 0.2)
+    def play_iamge(self, images, start_time):
+        for timestamp, image in images:
+            target_time = start_time + timestamp
+            current_time = time.time()
+
+            if target_time > current_time:
+                time.sleep(target_time - current_time)
+            self.VTS.send_image(image)
 
     def get_wav_duration(self, file_path: str):
         with wave.open(file_path, 'rb') as wf:

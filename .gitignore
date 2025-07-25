@@ -116,4 +116,5 @@ node_modules/
 .env
 tmp/
 *test.py
-
+test/
+test*

@@ -26,6 +26,11 @@ class OBS:
         self.OBS.set_input_settings(name=self.MEDIA_SOURCE_NAME, settings={"local_file": audio_file}, overlay=True)
         self.OBS.trigger_media_input_action(name=self.MEDIA_SOURCE_NAME, action="OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART")
 
+    def set_scene(self, scene:str):
+        pass
+    def play_image(self, image:str):
+        pass
+
     def close(self):
         if self.OBS:
             try:
