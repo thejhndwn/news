@@ -1,7 +1,7 @@
 
 
 
-class Animation_Generator:
+class AnimationGenerator:
     def __init__(self):
         pass
 

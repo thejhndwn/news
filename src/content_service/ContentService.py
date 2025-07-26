@@ -9,6 +9,8 @@ from content_service.audio_viseme_service.ScriptGenerator import ScriptGenerator
 from content_service.media_generation_service.ImageGenerator import ImageGenerator
 from content_service.media_generation_service.AnimationGenerator import AnimationGenerator
 
+import threading
+
 
 '''
 ContentService.queue will always be processed. 
@@ -77,10 +79,14 @@ class ContentService:
         # do stuff to get a new story, async probably
         if len(self.queue) >= 10:
             return story_id
-        article = self.NewsAggregator.get_articles(1)[0]
-        uuid = self.process_article(article)
-        self.queue.append(uuid)
+        add_story_thread = threading.Thread(target = self.add_story, args=[1])
+        add_story_thread.start()
         return story_id
+
+    def add_story(self, n):
+        articles = self.NewsAggregator.get_articles(n)
+        for a in articles:
+            self.queue.append(self.process_article(a))
     
     # if there is existing content, not deleted then load it into the queue
     def load_content(self, content_dir, file_extension = ".txt"):

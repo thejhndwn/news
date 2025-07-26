@@ -39,7 +39,7 @@ class Orchestrator:
                                         obs_websocket_password=OBS_WEBSOCKET_PASSWORD,
                                         obs_websocket_port=OBS_WEBSOCKET_PORT,
                                         twitch_key=TWITCH_KEY)
-        self.twitch_service = TwitchService(twitch_key = TWITCH_KEY)
+        # self.twitch_service = TwitchService(twitch_key = TWITCH_KEY)
         self.injection_queue = []
         self.input = {
                 'm': self.story_injection_from_url,
@@ -101,7 +101,8 @@ class Orchestrator:
             animation_injection.start()
         # open new thread to trigger custom scene
     def donation_shoutout(self):
-        donations = self.twitch_service.get_donations()
+        # donations = self.twitch_service.get_donations()
+        donations = []
         story_id=self.content_service.generate_donation(donations)
         self.injection_queue.append(story_id)
 

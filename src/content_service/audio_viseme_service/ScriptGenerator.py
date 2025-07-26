@@ -1,4 +1,4 @@
-from src.content_service.news_aggregator_service.NewsArticle import NewsArticle   
+from content_service.news_aggregator_service.NewsArticle import NewsArticle   
 from transformers import AutoModelForCausalLM
 from transformers import AutoTokenizer
 import torch

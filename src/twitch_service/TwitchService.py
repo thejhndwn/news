@@ -1,8 +1,9 @@
 from twitchio.ext import commands
 
-class TwitchBot(commands.Bot):
+class TwitchService(commands.Bot):
     def __init__(self, token: str, client_id:str, bot_nick: str, prefix: str, channel: str):
         super().__init__(
+                self,
                 token,
                 prefix,
                 initial_channels=[channel])
@@ -18,9 +19,8 @@ class TwitchBot(commands.Bot):
 
     async def event_ready(self):
         print(f" Logged in as | {self.nick}")
-    async def event_message(self, message):
-        if message.echo: return
-        await self.handle_commands(message)
+    async def event_message(self, payload):
+        await self.handle_commands(payload)
     
     @commands.command(name="expression")
     async def expression(self, ctx):
