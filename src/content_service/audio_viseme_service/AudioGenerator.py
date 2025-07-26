@@ -7,6 +7,8 @@ import torch
 from datasets import load_dataset
 import numpy as np
 
+from kokoro import KPipeline
+
 class AudioGenerator:
     def __init__(self, tmp_dir):
         self.tmp_dir = tmp_dir
