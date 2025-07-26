@@ -118,3 +118,4 @@ tmp/
 *test.py
 test/
 test*
+*.mp4

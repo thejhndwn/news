@@ -84,6 +84,9 @@ class VTS:
         self.VTS.send(json.dumps(off_request))
         response = json.loads(self.VTS.recv())
 
+    def send_animation(self, animation:str):
+        pass
+
     
     def close(self):
         if self.VTS:

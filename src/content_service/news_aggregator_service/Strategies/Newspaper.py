@@ -48,4 +48,14 @@ class NewspaperAggregationStrategy():
         del self.articles[:num]
         return articles
 
+    def get_article_from_url(self, url:str):
+        article = Article(url)
+        article.download()
+        article.parse()
+        news_article = NewsArticle(
+                title = article.title,
+                url = article.url,
+                publish_date = str(article.publish_date) or str(datetime.datetime.now()),
+                full_text = article.text)
+        return news_article
 

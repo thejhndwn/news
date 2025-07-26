@@ -6,6 +6,9 @@ from content_service.news_aggregator_service.Strategies.Newspaper import Newspap
 from content_service.audio_viseme_service.AudioGenerator import AudioGenerator
 from content_service.audio_viseme_service.VisemeGenerator import VisemeGenerator
 from content_service.audio_viseme_service.ScriptGenerator import ScriptGenerator
+from content_service.media_generation_service.ImageGenerator import ImageGenerator
+from content_service.media_generation_service.AnimationGenerator import AnimationGenerator
+
 
 '''
 ContentService.queue will always be processed. 
@@ -24,6 +27,8 @@ class ContentService:
         self.AudioGenerator = AudioGenerator(tmp_dir)
         self.ScriptGenerator = ScriptGenerator()
         self.VisemeGenerator = VisemeGenerator()
+        self.ImageGenerator = ImageGenerator()
+        self.AnimationGenerator = AnimationGenerator()
 
         # load existing content from viseme directory, grabbing the UUID file names, 
         # then subtract the difference and get_articles
@@ -46,6 +51,8 @@ class ContentService:
 
         script = self.generate_script(article, {} )
         print("this is the script:", script)
+        images = self.ImageGenerator.generate(script)
+        animations = self.AnimationGenerator.generate(script)
         self.generate_audio_file(script, audio_file_path)
         self.generate_visemes(viseme_file_path, audio_file_path) 
         
@@ -56,6 +63,11 @@ class ContentService:
         self.AudioGenerator.generate_long_audio(script, audio_file_path)
     def generate_visemes(self, viseme_file_path, audio_file_path):
         self.VisemeGenerator.generate(viseme_file_path, audio_file_path)
+
+    def make_story_from_url(self, url):
+        article = self.NewsAggregator.get_article_from_url(url)
+        uuid = self.process_article(article)
+        return uuid
 
 
     def get_story(self):
@@ -78,6 +90,22 @@ class ContentService:
         for file in content_dir.glob(f"*{file_extension}"):
             self.queue.append(file.stem)
 
+    # donations are a list of (donator_name, "amount", message)
+    def generate_donation(self, donations):
+        uuid = uuid4()
+
+        audio_file_path = self.output_path / f"audio/{uuid}.wav"
+        viseme_file_path = self.output_path / f"viseme/{uuid}.json"
+        script = """
+        And now a word from our sponsors.
+
+        """
+        for donator_name, amt, msg in donations:
+            script += f"{donator_name} says {msg}"
+
+        self.AudioGenerator.generate_long_audio(script, audio_file_path)
+        self.VisemeGenerator.generate(viseme_file_path, audio_file_path)
+        return uuid
     
     def print(self):
         print(self.queue)
