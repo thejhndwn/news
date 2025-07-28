@@ -52,10 +52,10 @@ class Orchestrator:
     # I want to inject: a story, a "scene" (donation shoutout, expression trigger, animation trigger)
     def injection(self):  
         while True:
-            input = input("Inject something: make story from url(m,M), inject already made story by uuid(s,S), donation shoutout(d,D), trigger expression(e,E) or animation(a,A)").lower()
-            if input not in self.input.keys():
+            choice = input("Inject something: make story from url(m,M), inject already made story by uuid(s,S), donation shoutout(d,D), trigger expression(e,E) or animation(a,A)").lower()
+            if choice not in self.input.keys():
                 continue
-            self.input[input]()
+            self.input[choice]()
 
     def story_injection_from_url(self):
         # make story and add to all the necessary files
